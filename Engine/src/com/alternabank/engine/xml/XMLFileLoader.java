@@ -11,10 +11,12 @@ import com.alternabank.engine.xml.event.*;
 import com.alternabank.engine.xml.event.listener.*;
 import com.alternabank.engine.xml.generated.*;
 
+import javax.swing.event.EventListenerList;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.nio.file.*;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,10 +29,7 @@ public class XMLFileLoader implements XMLLoader{
     private Path filePath;
     private Path lastLoadedFilePath = null;
     private AbsDescriptor loadedDescriptor;
-    private final List<XMLFileLoadFailureListener> fileLoadFailureListeners = new LinkedList<>();
-    private final List<XMLCategoryLoadFailureListener> categoryLoadFailureListeners = new LinkedList<>();
-    private final List<XMLCustomerLoadFailureListener> customerLoadFailureListeners = new LinkedList<>();
-    private final List<XMLLoanLoadFailureListener> loanLoadFailureListeners = new LinkedList<>();
+    private final EventListenerList eventListeners = new EventListenerList();
     private final List<XMLLoadSuccessListener> loadSuccessListeners = new LinkedList<>();
     private final List<String> loadedCustomerNames = new LinkedList<>();
     private final List<String> loadedLoanIDs = new LinkedList<>();
@@ -76,30 +75,30 @@ public class XMLFileLoader implements XMLLoader{
 
     @Override
     public void addFileLoadFailureListener(XMLFileLoadFailureListener listener) {
-        fileLoadFailureListeners.add(listener);
+        eventListeners.add(XMLFileLoadFailureListener.class, listener);
     }
 
     @Override
     public void addCategoryLoadFailureListener(XMLCategoryLoadFailureListener listener) {
-        categoryLoadFailureListeners.add(listener);
+        eventListeners.add(XMLCategoryLoadFailureListener.class, listener);
     }
 
     @Override
     public void addCustomerLoadFailureListener(XMLCustomerLoadFailureListener listener) {
-        customerLoadFailureListeners.add(listener);
+        eventListeners.add(XMLCustomerLoadFailureListener.class, listener);
     }
 
     @Override
     public void addLoanLoadFailureListener(XMLLoanLoadFailureListener listener) {
-        loanLoadFailureListeners.add(listener);
+        eventListeners.add(XMLLoanLoadFailureListener.class, listener);
     }
 
     @Override
     public void addLoadSuccessListener(XMLLoadSuccessListener listener) {
-        loadSuccessListeners.add(listener);
+        eventListeners.add(XMLLoadSuccessListener.class, listener);
     }
 
-    @Override
+/*    @Override
     public List<XMLFileLoadFailureListener> getFileLoadFailureListeners() {
         return Collections.unmodifiableList(fileLoadFailureListeners);
     }
@@ -122,7 +121,7 @@ public class XMLFileLoader implements XMLLoader{
     @Override
     public List<XMLLoadSuccessListener> getLoadSuccessListeners() {
         return Collections.unmodifiableList(loadSuccessListeners);
-    }
+    }*/
 
     private boolean checkFilePath() {
         boolean valid;
@@ -134,7 +133,7 @@ public class XMLFileLoader implements XMLLoader{
         valid = loadFailureCauses.isEmpty();
 
         if(!valid)
-            fileLoadFailureListeners.forEach(listener -> listener.fileLoadFailed(new XMLFileLoadFailureEvent(this, loadFailureCauses, filePath)));
+            Arrays.stream(eventListeners.getListeners(XMLFileLoadFailureListener.class)).forEach(listener -> listener.fileLoadFailed(new XMLFileLoadFailureEvent(this, loadFailureCauses, filePath)));
 
         return valid;
     }
@@ -187,7 +186,7 @@ public class XMLFileLoader implements XMLLoader{
         valid = loadFailureCauses.isEmpty();
 
         if(!valid)
-            categoryLoadFailureListeners.forEach(listener -> listener.categoryLoadFailed(new XMLCategoryLoadFailureEvent(this, loadFailureCauses, loadedCategory)));
+            Arrays.stream(eventListeners.getListeners(XMLCategoryLoadFailureListener.class)).forEach(listener -> listener.categoryLoadFailed(new XMLCategoryLoadFailureEvent(this, loadFailureCauses, loadedCategory)));
         return valid;
     }
 
@@ -210,7 +209,7 @@ public class XMLFileLoader implements XMLLoader{
         valid = loadFailureCauses.isEmpty();
 
         if(!valid)
-            customerLoadFailureListeners.forEach(listener -> listener.customerLoadFailed(new XMLCustomerLoadFailureEvent(this, loadFailureCauses, loadedCustomer)));
+            Arrays.stream(eventListeners.getListeners(XMLCustomerLoadFailureListener.class)).forEach(listener -> listener.customerLoadFailed(new XMLCustomerLoadFailureEvent(this, loadFailureCauses, loadedCustomer)));
 
         return valid;
     }
@@ -236,7 +235,7 @@ public class XMLFileLoader implements XMLLoader{
         valid = loadFailureCauses.isEmpty();
 
         if(!valid)
-            loanLoadFailureListeners.forEach(listener -> listener.loanLoadFailed(new XMLLoanLoadFailureEvent(this, loadFailureCauses, loadedLoan)));
+            Arrays.stream(eventListeners.getListeners(XMLLoanLoadFailureListener.class)).forEach(listener -> listener.loanLoadFailed(new XMLLoanLoadFailureEvent(this, loadFailureCauses, loadedLoan)));
 
         return valid;
     }

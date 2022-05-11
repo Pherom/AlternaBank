@@ -2,7 +2,9 @@ package com.alternabank.engine.xml.event.listener;
 
 import com.alternabank.engine.xml.event.XMLLoadSuccessEvent;
 
-public interface XMLLoadSuccessListener {
+import java.util.EventListener;
+
+public interface XMLLoadSuccessListener extends EventListener {
 
     void loadedSuccessfully(XMLLoadSuccessEvent event);
 

@@ -19,7 +19,7 @@ public interface XMLLoader {
 
     void addLoadSuccessListener(XMLLoadSuccessListener listener);
 
-    List<XMLFileLoadFailureListener> getFileLoadFailureListeners();
+/*    List<XMLFileLoadFailureListener> getFileLoadFailureListeners();
 
     List<XMLCategoryLoadFailureListener> getCategoryLoadFailureListeners();
 
@@ -27,7 +27,7 @@ public interface XMLLoader {
 
     List<XMLLoanLoadFailureListener> getLoanLoadFailureListeners();
 
-    List<XMLLoadSuccessListener> getLoadSuccessListeners();
+    List<XMLLoadSuccessListener> getLoadSuccessListeners();*/
 
     void stopLoading();
 
