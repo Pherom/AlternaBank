@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane id="adminView" fx:id="adminViewComponent" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.admin.AdminViewController">
+   <top>
+      <VBox BorderPane.alignment="CENTER">
+         <children>
+              <fx:include fx:id="adminViewHeaderComponent" source="header/AdminViewHeader.fxml" />
+            <Separator prefWidth="200.0" />
+         </children>
+      </VBox>
+   </top>
+</BorderPane>

@@ -1,4 +1,4 @@
-package com.alternabank.engine.loan.dto;
+package com.alternabank.engine.loan.state;
 
 import com.alternabank.engine.loan.Loan;
 import com.alternabank.engine.transaction.event.listener.BilateralTransactionListener;

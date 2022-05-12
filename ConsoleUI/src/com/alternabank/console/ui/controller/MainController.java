@@ -1,4 +1,4 @@
-package com.alternabank.console.controller;
+package com.alternabank.console.ui.controller;
 
 import com.alternabank.console.ui.event.handler.xml.*;
 import com.alternabank.engine.AlternaBankEngine;

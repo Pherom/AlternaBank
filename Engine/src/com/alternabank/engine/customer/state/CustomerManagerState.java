@@ -1,4 +1,4 @@
-package com.alternabank.engine.customer.dto;
+package com.alternabank.engine.customer.state;
 
 import com.alternabank.engine.customer.CustomerManager;
 import com.alternabank.engine.transaction.event.listener.BilateralTransactionListener;

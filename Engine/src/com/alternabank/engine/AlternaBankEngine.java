@@ -11,6 +11,9 @@ import com.alternabank.engine.time.TimeManager;
 import com.alternabank.engine.transaction.UnilateralTransaction;
 import com.alternabank.engine.transaction.event.listener.BilateralTransactionListener;
 import com.alternabank.engine.transaction.event.listener.UnilateralTransactionListener;
+import com.alternabank.engine.user.Admin;
+import com.alternabank.engine.user.User;
+import com.alternabank.engine.user.UserManager;
 import com.alternabank.engine.xml.XMLFileLoader;
 import com.alternabank.engine.xml.XMLLoader;
 import com.alternabank.engine.xml.event.listener.*;
@@ -142,6 +145,26 @@ public class AlternaBankEngine implements Engine{
     @Override
     public String getTimeUnit() {
         return TimeManager.getInstance().getTimeUnitName();
+    }
+
+    @Override
+    public Admin getAdmin() {
+        return UserManager.getInstance().getAdmin();
+    }
+
+    @Override
+    public User getUser(String name) {
+        return UserManager.getInstance().getUser(name);
+    }
+
+    @Override
+    public Set<User> getUsers() {
+        return UserManager.getInstance().getUsers();
+    }
+
+    @Override
+    public User getCurrentUser() {
+        return UserManager.getInstance().getCurrentUser();
     }
 
 }

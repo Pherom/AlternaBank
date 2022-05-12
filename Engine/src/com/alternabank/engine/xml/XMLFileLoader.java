@@ -1,9 +1,9 @@
 package com.alternabank.engine.xml;
 
 import com.alternabank.engine.customer.CustomerManager;
-import com.alternabank.engine.customer.dto.CustomerManagerState;
+import com.alternabank.engine.customer.state.CustomerManagerState;
 import com.alternabank.engine.loan.LoanManager;
-import com.alternabank.engine.loan.dto.LoanManagerState;
+import com.alternabank.engine.loan.state.LoanManagerState;
 import com.alternabank.engine.loan.request.LoanRequest;
 import com.alternabank.engine.time.TimeManager;
 import com.alternabank.engine.transaction.UnilateralTransaction;
@@ -17,8 +17,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.nio.file.*;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,13 +28,6 @@ public class XMLFileLoader implements XMLLoader{
     private Path lastLoadedFilePath = null;
     private AbsDescriptor loadedDescriptor;
     private final EventListenerList eventListeners = new EventListenerList();
-    private final List<XMLLoadSuccessListener> loadSuccessListeners = new LinkedList<>();
-    private final List<String> loadedCustomerNames = new LinkedList<>();
-    private final List<String> loadedLoanIDs = new LinkedList<>();
-    private final List<String> loadedCategoryNames = new LinkedList<>();
-    private final List<String> lastLoadedCustomerNames = new LinkedList<>();
-    private final List<String> lastLoadedLoanIDs = new LinkedList<>();
-    private final List<String> lastLoadedCategoryNames = new LinkedList<>();
 
     @Override
     public void loadSystemFromFile(Path filePath) {
@@ -45,7 +36,8 @@ public class XMLFileLoader implements XMLLoader{
         if(validFilePath) {
             CustomerManagerState customerManagerState = CustomerManager.getInstance().createCustomerManagerState();
             LoanManagerState loanManagerState = LoanManager.getInstance().createLoanManagerState();
-            undoLastLoad();
+            LoanManager.getInstance().reset();
+            CustomerManager.getInstance().reset();
             resumeLoad = true;
             loadDescriptor();
             loadCustomers();
@@ -54,17 +46,11 @@ public class XMLFileLoader implements XMLLoader{
             if (resumeLoad)
                 loadLoans();
 
-            if (resumeLoad && !(loadedCustomerNames.isEmpty() || loadedCategoryNames.isEmpty() || loadedLoanIDs.isEmpty())) {
+            if (resumeLoad) {
                 lastLoadedFilePath = filePath;
-                lastLoadedCustomerNames.addAll(loadedCustomerNames);
-                lastLoadedLoanIDs.addAll(loadedLoanIDs);
-                lastLoadedCategoryNames.addAll(loadedCategoryNames);
-                loadedCustomerNames.clear();
-                loadedLoanIDs.clear();
-                loadedCategoryNames.clear();
                 resumeLoad = false;
                 TimeManager.getInstance().resetCurrentTime();
-                loadSuccessListeners.forEach(listener -> listener.loadedSuccessfully(new XMLLoadSuccessEvent(this)));
+                Arrays.stream(eventListeners.getListeners(XMLLoadSuccessListener.class)).forEach(listener -> listener.loadedSuccessfully(new XMLLoadSuccessEvent(this)));
             }
             else {
                 CustomerManager.getInstance().restoreCustomerManager(customerManagerState);
@@ -98,31 +84,6 @@ public class XMLFileLoader implements XMLLoader{
         eventListeners.add(XMLLoadSuccessListener.class, listener);
     }
 
-/*    @Override
-    public List<XMLFileLoadFailureListener> getFileLoadFailureListeners() {
-        return Collections.unmodifiableList(fileLoadFailureListeners);
-    }
-
-    @Override
-    public List<XMLCategoryLoadFailureListener> getCategoryLoadFailureListeners() {
-        return Collections.unmodifiableList(categoryLoadFailureListeners);
-    }
-
-    @Override
-    public List<XMLCustomerLoadFailureListener> getCustomerLoadFailureListeners() {
-        return Collections.unmodifiableList(customerLoadFailureListeners);
-    }
-
-    @Override
-    public List<XMLLoanLoadFailureListener> getLoanLoadFailureListeners() {
-        return Collections.unmodifiableList(loanLoadFailureListeners);
-    }
-
-    @Override
-    public List<XMLLoadSuccessListener> getLoadSuccessListeners() {
-        return Collections.unmodifiableList(loadSuccessListeners);
-    }*/
-
     private boolean checkFilePath() {
         boolean valid;
 
@@ -144,19 +105,8 @@ public class XMLFileLoader implements XMLLoader{
     }
 
     @Override
-    public Path getPathOfLastLoadedFile() {
-        return lastLoadedFilePath;
-    }
-
-    @Override
     public Path getLastLoadedFilePath() {
         return lastLoadedFilePath;
-    }
-
-    private void undoLastLoad() {
-        lastLoadedLoanIDs.removeIf(id -> LoanManager.getInstance().removeLoan(id));
-        lastLoadedCategoryNames.removeIf(category -> LoanManager.getInstance().removeCategory(category));
-        lastLoadedCustomerNames.removeIf(name -> CustomerManager.getInstance().removeCustomer(name));
     }
 
     private void loadDescriptor() {
@@ -173,7 +123,6 @@ public class XMLFileLoader implements XMLLoader{
         loadedDescriptor.getAbsCategories().getAbsCategory().stream()
                 .filter(loadedCategory -> resumeLoad && checkCategory(loadedCategory))
                 .forEach(loadedCategory -> {
-                    loadedCategoryNames.add(loadedCategory);
                     LoanManager.getInstance().addCategory(loadedCategory); });
     }
 
@@ -194,7 +143,6 @@ public class XMLFileLoader implements XMLLoader{
         loadedDescriptor.getAbsCustomers().getAbsCustomer().stream()
                 .filter(loadedCustomer -> resumeLoad && checkCustomer(loadedCustomer))
                 .forEach(loadedCustomer -> {
-                    loadedCustomerNames.add(loadedCustomer.getName());
                     CustomerManager.getInstance().createCustomer((loadedCustomer.getName()))
                         .getAccount().executeTransaction(UnilateralTransaction.Type.DEPOSIT, loadedCustomer.getAbsBalance()); });
     }
@@ -218,7 +166,6 @@ public class XMLFileLoader implements XMLLoader{
         loadedDescriptor.getAbsLoans().getAbsLoan().stream()
                 .filter(loadedLoan -> resumeLoad && checkLoan(loadedLoan))
                 .forEach(loadedLoan -> {
-                    loadedLoanIDs.add(loadedLoan.getId());
                     CustomerManager.getInstance().getCustomersByName().get(loadedLoan.getAbsOwner())
                         .postLoanRequest(LoanRequest.createByInterestPerPayment(loadedLoan.getAbsOwner(), loadedLoan.getAbsCategory(),
                                 loadedLoan.getAbsCapital(), loadedLoan.getAbsPaysEveryYaz(), loadedLoan.getAbsIntristPerPayment(),

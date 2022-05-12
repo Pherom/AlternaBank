@@ -6,6 +6,8 @@ import com.alternabank.engine.loan.Investment;
 import com.alternabank.engine.loan.dto.LoanDetails;
 import com.alternabank.engine.transaction.event.listener.BilateralTransactionListener;
 import com.alternabank.engine.transaction.event.listener.UnilateralTransactionListener;
+import com.alternabank.engine.user.Admin;
+import com.alternabank.engine.user.User;
 import com.alternabank.engine.xml.event.listener.*;
 
 import java.nio.file.Path;
@@ -53,4 +55,11 @@ public interface Engine {
 
     String getTimeUnit();
 
+    Admin getAdmin();
+
+    User getUser(String name);
+
+    Set<User> getUsers();
+
+    User getCurrentUser();
 }

@@ -3,7 +3,7 @@ package com.alternabank.engine.loan;
 import com.alternabank.engine.account.AbstractDepositAccount;
 import com.alternabank.engine.customer.CustomerManager;
 import com.alternabank.engine.loan.dto.LoanDetails;
-import com.alternabank.engine.loan.dto.LoanManagerState;
+import com.alternabank.engine.loan.state.LoanManagerState;
 import com.alternabank.engine.time.TimeManager;
 import com.alternabank.engine.time.event.TimeAdvancementEvent;
 import com.alternabank.engine.time.event.listener.TimeAdvancementListener;
@@ -112,6 +112,11 @@ public class LoanManager implements TimeAdvancementListener {
         }
 
         return success;
+    }
+
+    public void reset() {
+        loansByID.clear();
+        availableCategories.clear();
     }
 
     public void addUnilateralTransactionListener(UnilateralTransactionListener listener) {

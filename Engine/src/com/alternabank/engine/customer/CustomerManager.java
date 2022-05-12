@@ -3,13 +3,14 @@ package com.alternabank.engine.customer;
 import com.alternabank.engine.account.AbstractOwnedAccount;
 import com.alternabank.engine.customer.dto.CustomerBalanceDetails;
 import com.alternabank.engine.customer.dto.CustomerDetails;
-import com.alternabank.engine.customer.dto.CustomerManagerState;
+import com.alternabank.engine.customer.state.CustomerManagerState;
 import com.alternabank.engine.loan.Investment;
 import com.alternabank.engine.loan.Loan;
 import com.alternabank.engine.loan.LoanManager;
 import com.alternabank.engine.loan.request.LoanRequest;
 import com.alternabank.engine.transaction.event.listener.BilateralTransactionListener;
 import com.alternabank.engine.transaction.event.listener.UnilateralTransactionListener;
+import com.alternabank.engine.user.User;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -80,6 +81,10 @@ public class CustomerManager {
         return success;
     }
 
+    public void reset() {
+        customersByName.clear();
+    }
+
     public void addUnilateralTransactionListener(UnilateralTransactionListener listener) {
         unilateralTransactionListeners.add(listener);
     }
@@ -96,7 +101,7 @@ public class CustomerManager {
         return Collections.unmodifiableList(bilateralTransactionListeners);
     }
 
-    public class Customer extends AbstractOwnedAccount.Owner implements Lender, Borrower {
+    public class Customer extends AbstractOwnedAccount.Owner implements Lender, Borrower, User {
 
         private final Set<String> postedLoansIDs = new HashSet<>();
         private final Set<String> investedLoansIDs = new HashSet<>();

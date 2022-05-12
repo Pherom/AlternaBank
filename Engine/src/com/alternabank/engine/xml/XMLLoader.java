@@ -31,8 +31,6 @@ public interface XMLLoader {
 
     void stopLoading();
 
-    Path getPathOfLastLoadedFile();
-
     Path getLastLoadedFilePath();
 
 }
