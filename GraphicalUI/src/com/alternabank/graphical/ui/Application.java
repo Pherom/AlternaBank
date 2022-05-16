@@ -1,5 +1,6 @@
 package com.alternabank.graphical.ui;
 
+import com.alternabank.engine.user.UserManager;
 import com.alternabank.graphical.ui.application.AppController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -26,7 +27,7 @@ public class Application extends javafx.application.Application {
         fxmlLoader.setLocation(url);
         Parent root = fxmlLoader.load(url.openStream());
 
-        Scene scene = new Scene(root, 800, 550);
+        Scene scene = new Scene(root, 1000, 630);
         primaryStage.setScene(scene);
         primaryStage.show();
     }

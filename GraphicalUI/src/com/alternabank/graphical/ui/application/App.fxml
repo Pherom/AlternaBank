@@ -2,12 +2,10 @@
 
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane id="app" fx:id="appComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="550.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.AppController">
-   <center>
-        <fx:include fx:id="adminViewComponent" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" source="admin/AdminView.fxml" BorderPane.alignment="TOP_CENTER" />
-   </center>
+<BorderPane id="app" fx:id="appComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="630.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.AppController">
    <top>
       <VBox BorderPane.alignment="CENTER">
          <children>
@@ -16,4 +14,12 @@
          </children>
       </VBox>
    </top>
+   <center>
+      <StackPane prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+         <children>
+              <fx:include fx:id="adminViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" source="admin/AdminView.fxml" BorderPane.alignment="TOP_CENTER" />
+              <fx:include fx:id="userViewComponent" source="user/UserView.fxml" />
+         </children>
+      </StackPane>
+   </center>
 </BorderPane>

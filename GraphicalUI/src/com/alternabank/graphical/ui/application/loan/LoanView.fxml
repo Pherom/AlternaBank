@@ -5,7 +5,7 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 
-<SplitPane dividerPositions="0.75" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="800.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/18" fx:controller="com.alternabank.graphical.ui.application.loan.LoanViewController">
+<SplitPane dividerPositions="0.6" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="1000.0" stylesheets="@LoanView.css" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.loan.LoanViewController">
   <items>
       <TableView id="loan" fx:id="loanTableView">
          <columns>
@@ -15,7 +15,7 @@
             <TableColumn id="loanCapitalColumn" fx:id="loanCapitalTableColumn" editable="false" prefWidth="75.0" text="Capital" />
             <TableColumn id="loanInterestColumn" fx:id="loanInterestTableColumn" editable="false" prefWidth="65.0" text="Interest" />
             <TableColumn id="loanTotalColumn" fx:id="loanTotalTableColumn" editable="false" prefWidth="75.0" text="Total" />
-            <TableColumn fx:id="loanStatusTableColumn" editable="false" prefWidth="65.0" text="Status" />
+            <TableColumn id="loanStatusColumn" fx:id="loanStatusTableColumn" editable="false" prefWidth="65.0" text="Status" />
          </columns>
       </TableView>
       <ListView id="loanDetailsList" fx:id="loanDetailsListView" prefHeight="200.0" prefWidth="200.0" />

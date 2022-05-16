@@ -14,19 +14,18 @@ import com.alternabank.engine.transaction.event.listener.UnilateralTransactionLi
 import com.alternabank.engine.user.Admin;
 import com.alternabank.engine.user.User;
 
+import javax.swing.event.EventListenerList;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class CustomerManager {
 
     private final Admin admin;
-    private final Map<String, Customer> customersByName;
-    private final List<UnilateralTransactionListener> unilateralTransactionListeners = new LinkedList<>();
-    private final List<BilateralTransactionListener> bilateralTransactionListeners = new LinkedList<>();
+    private final Map<String, Customer> customersByName = new HashMap<>();
+    private final EventListenerList eventListeners = new EventListenerList();
 
     public CustomerManager(Admin admin) {
         this.admin = admin;
-        customersByName = new HashMap<>();
     }
 
     public Admin getAdmin() {
@@ -34,16 +33,12 @@ public class CustomerManager {
     }
 
     public CustomerManagerState createCustomerManagerState() {
-        return new CustomerManagerState(customersByName, unilateralTransactionListeners, bilateralTransactionListeners);
+        return new CustomerManagerState(customersByName);
     }
 
     public void restoreCustomerManager(CustomerManagerState customerManagerState) {
         this.customersByName.clear();
         this.customersByName.putAll(customerManagerState.getCustomersByName());
-        this.unilateralTransactionListeners.clear();
-        this.unilateralTransactionListeners.addAll(customerManagerState.getUnilateralTransactionListeners());
-        this.bilateralTransactionListeners.clear();
-        this.bilateralTransactionListeners.addAll(customerManagerState.getBilateralTransactionListeners());
     }
 
     public Map<String, Customer> getCustomersByName() {
@@ -87,19 +82,11 @@ public class CustomerManager {
     }
 
     public void addUnilateralTransactionListener(UnilateralTransactionListener listener) {
-        unilateralTransactionListeners.add(listener);
+        eventListeners.add(UnilateralTransactionListener.class, listener);
     }
 
     public void addBilateralTransactionListener(BilateralTransactionListener listener) {
-        bilateralTransactionListeners.add(listener);
-    }
-
-    public List<UnilateralTransactionListener> getUnilateralTransactionListeners() {
-        return Collections.unmodifiableList(unilateralTransactionListeners);
-    }
-
-    public List<BilateralTransactionListener> getBilateralTransactionListeners() {
-        return Collections.unmodifiableList(bilateralTransactionListeners);
+        eventListeners.add(BilateralTransactionListener.class, listener);
     }
 
     public Set<String> getCustomerNames() {
@@ -216,14 +203,8 @@ public class CustomerManager {
         }
 
         @Override
-        protected List<UnilateralTransactionListener> getUnilateralTransactionListenerList() {
-            return unilateralTransactionListeners;
+        public EventListenerList getEventListeners() {
+            return eventListeners;
         }
-
-        @Override
-        protected List<BilateralTransactionListener> getBilateralTransactionListenerList() {
-            return bilateralTransactionListeners;
-        }
-
     }
 }

@@ -2,7 +2,9 @@ package com.alternabank.engine.transaction.event.listener;
 
 import com.alternabank.engine.transaction.event.BilateralTransactionEvent;
 
-public interface BilateralTransactionListener {
+import java.util.EventListener;
+
+public interface BilateralTransactionListener extends EventListener {
 
     void bilateralTransactionExecuted(BilateralTransactionEvent event);
 

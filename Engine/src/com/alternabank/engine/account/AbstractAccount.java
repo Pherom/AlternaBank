@@ -70,7 +70,7 @@ public abstract class AbstractAccount implements Account, Transaction.Initiator,
         Transaction.Unilateral transaction = new UnilateralTransaction(type, total);
         Transaction.Record.Unilateral record = transaction.execute(this);
         ledger.log(record);
-        getUnilateralTransactionListenerList().forEach(listener -> listener.unilateralTransactionExecuted(new UnilateralTransactionEvent(this, record)));
+        Arrays.stream(getEventListeners().getListeners(UnilateralTransactionListener.class)).forEach(listener -> listener.unilateralTransactionExecuted(new UnilateralTransactionEvent(this, record)));
         return record;
     }
 
@@ -86,32 +86,18 @@ public abstract class AbstractAccount implements Account, Transaction.Initiator,
     public Transaction.Record.Bilateral respondToTransaction(Transaction.Initiator initiator, Transaction.Bilateral transaction) {
         Transaction.Record.Bilateral record = transaction.execute(initiator, this);
         ledger.log(record);
-        getBilateralTransactionListenerList().forEach(listener -> listener.bilateralTransactionExecuted(new BilateralTransactionEvent(initiator, record)));
+        Arrays.stream(getEventListeners().getListeners(BilateralTransactionListener.class)).forEach(listener -> listener.bilateralTransactionExecuted(new BilateralTransactionEvent(initiator, record)));
         return record;
     }
 
-    protected abstract List<UnilateralTransactionListener> getUnilateralTransactionListenerList();
-
-    protected abstract List<BilateralTransactionListener> getBilateralTransactionListenerList();
-
     @Override
     public void addUnilateralTransactionListener(UnilateralTransactionListener listener) {
-        getUnilateralTransactionListenerList().add(listener);
+        getEventListeners().add(UnilateralTransactionListener.class, listener);
     }
 
     @Override
     public void addBilateralTransactionListener(BilateralTransactionListener listener) {
-        getBilateralTransactionListenerList().add(listener);
-    }
-
-    @Override
-    public List<UnilateralTransactionListener> getUnilateralTransactionListeners() {
-        return Collections.unmodifiableList(getUnilateralTransactionListenerList());
-    }
-
-    @Override
-    public List<BilateralTransactionListener> getBilateralTransactionListeners() {
-        return Collections.unmodifiableList(getBilateralTransactionListenerList());
+        getEventListeners().add(BilateralTransactionListener.class, listener);
     }
 
     @Override

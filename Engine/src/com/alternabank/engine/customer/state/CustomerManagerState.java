@@ -9,27 +9,13 @@ import java.util.*;
 public class CustomerManagerState {
 
     private final Map<String, CustomerManager.Customer> customersByName = new HashMap<>();
-    private final List<UnilateralTransactionListener> unilateralTransactionListeners = new LinkedList<>();
-    private final List<BilateralTransactionListener> bilateralTransactionListeners = new LinkedList<>();
 
-    public CustomerManagerState(Map<String, CustomerManager.Customer> customersByName,
-                                List<UnilateralTransactionListener> unilateralTransactionListeners,
-                                List<BilateralTransactionListener> bilateralTransactionListeners) {
+    public CustomerManagerState(Map<String, CustomerManager.Customer> customersByName) {
         this.customersByName.putAll(customersByName);
-        this.unilateralTransactionListeners.addAll(unilateralTransactionListeners);
-        this.bilateralTransactionListeners.addAll(bilateralTransactionListeners);
     }
 
     public Map<String, CustomerManager.Customer> getCustomersByName() {
         return customersByName;
-    }
-
-    public List<UnilateralTransactionListener> getUnilateralTransactionListeners() {
-        return unilateralTransactionListeners;
-    }
-
-    public List<BilateralTransactionListener> getBilateralTransactionListeners() {
-        return bilateralTransactionListeners;
     }
 
     @Override
@@ -37,11 +23,11 @@ public class CustomerManagerState {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CustomerManagerState that = (CustomerManagerState) o;
-        return Objects.equals(customersByName, that.customersByName) && Objects.equals(unilateralTransactionListeners, that.unilateralTransactionListeners) && Objects.equals(bilateralTransactionListeners, that.bilateralTransactionListeners);
+        return Objects.equals(customersByName, that.customersByName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(customersByName, unilateralTransactionListeners, bilateralTransactionListeners);
+        return Objects.hash(customersByName);
     }
 }

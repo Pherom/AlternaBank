@@ -3,6 +3,8 @@ package com.alternabank.engine.loan;
 import com.alternabank.engine.account.AbstractDepositAccount;
 import com.alternabank.engine.customer.CustomerManager;
 import com.alternabank.engine.loan.dto.LoanDetails;
+import com.alternabank.engine.loan.event.LoanStatusUpdateEvent;
+import com.alternabank.engine.loan.event.listener.LoanStatusUpdateListener;
 import com.alternabank.engine.loan.state.LoanManagerState;
 import com.alternabank.engine.time.TimeManager;
 import com.alternabank.engine.time.event.TimeAdvancementEvent;
@@ -13,6 +15,7 @@ import com.alternabank.engine.transaction.event.listener.BilateralTransactionLis
 import com.alternabank.engine.transaction.event.listener.UnilateralTransactionListener;
 import com.alternabank.engine.user.Admin;
 
+import javax.swing.event.EventListenerList;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,11 +24,10 @@ public class LoanManager implements TimeAdvancementListener {
     private final Admin admin;
     private final Set<String> availableCategories = new HashSet<>();
     private final Map<String, Loan> loansByID = new HashMap<>();
-    private final List<UnilateralTransactionListener> unilateralTransactionListeners = new LinkedList<>();
-    private final List<BilateralTransactionListener> bilateralTransactionListeners = new LinkedList<>();
+    private final EventListenerList eventListeners = new EventListenerList();
 
     public LoanManagerState createLoanManagerState() {
-        return new LoanManagerState(availableCategories, loansByID, unilateralTransactionListeners, bilateralTransactionListeners);
+        return new LoanManagerState(availableCategories, loansByID);
     }
 
     public void restoreLoanManager(LoanManagerState loanManagerState) {
@@ -33,10 +35,6 @@ public class LoanManager implements TimeAdvancementListener {
         this.availableCategories.addAll(loanManagerState.getAvailableCategories());
         this.loansByID.clear();
         this.loansByID.putAll(loanManagerState.getLoansByID());
-        this.unilateralTransactionListeners.clear();
-        this.unilateralTransactionListeners.addAll(loanManagerState.getUnilateralTransactionListeners());
-        this.bilateralTransactionListeners.clear();
-        this.bilateralTransactionListeners.addAll(loanManagerState.getBilateralTransactionListeners());
     }
 
     public LoanManager(Admin admin) {
@@ -116,11 +114,15 @@ public class LoanManager implements TimeAdvancementListener {
     }
 
     public void addUnilateralTransactionListener(UnilateralTransactionListener listener) {
-        unilateralTransactionListeners.add(listener);
+        eventListeners.add(UnilateralTransactionListener.class, listener);
     }
 
     public void addBilateralTransactionListener(BilateralTransactionListener listener) {
-        bilateralTransactionListeners.add(listener);
+        eventListeners.add(BilateralTransactionListener.class, listener);
+    }
+
+    public void addLoanStatusUpdateListener(LoanStatusUpdateListener listener) {
+        eventListeners.add(LoanStatusUpdateListener.class, listener);
     }
 
     public boolean removeCategory(String category) {
@@ -452,8 +454,10 @@ public class LoanManager implements TimeAdvancementListener {
                 investmentByLenderName.put(customer.getName(), investmentByLenderName.getOrDefault(customer.getName(), 0.0) + total);
                 customer.getAccount().executeTransaction(BilateralTransaction.Type.TRANSFER, getAccount(), total, 0);
                 if (getTotalInvestment() >= originalRequest.getCapital()) {
+                    Loan.Status oldStatus = status;
                     status = Status.ACTIVE;
                     statusTimes.put(Status.ACTIVE, admin.getTimeManager().getCurrentTime());
+                    Arrays.stream(eventListeners.getListeners(LoanStatusUpdateListener.class)).forEach(listener -> listener.statusUpdated(new LoanStatusUpdateEvent(oldStatus, this.toLoanDetails())));
                     getAccount().executeTransaction(BilateralTransaction.Type.TRANSFER, admin.getCustomerManager().getCustomersByName().get(originalRequest.getBorrowerName()).getAccount(), originalRequest.getCapital(), 0);
                 }
             }
@@ -466,8 +470,10 @@ public class LoanManager implements TimeAdvancementListener {
             if(record.getStatus() == Transaction.Status.FAILED && getRemainingInstallmentCount() >= 0) {
                 delayedInstallmentCount++;
                 if(status != Status.RISK) {
+                    Loan.Status oldStatus = status;
                     status = Status.RISK;
                     statusTimes.put(Status.RISK, admin.getTimeManager().getCurrentTime());
+                    Arrays.stream(eventListeners.getListeners(LoanStatusUpdateListener.class)).forEach(listener -> listener.statusUpdated(new LoanStatusUpdateEvent(oldStatus, this.toLoanDetails())));
                 }
             }
             else if(record.getStatus() == Transaction.Status.SUCCESSFUL){
@@ -478,8 +484,10 @@ public class LoanManager implements TimeAdvancementListener {
                     delayedInstallmentCount = 0;
                 }
                 if(getPaidTotal() == originalRequest.getTotal()) {
+                    Loan.Status oldStatus = status;
                     status = Status.FINISHED;
                     statusTimes.put(Status.FINISHED, admin.getTimeManager().getCurrentTime());
+                    Arrays.stream(eventListeners.getListeners(LoanStatusUpdateListener.class)).forEach(listener -> listener.statusUpdated(new LoanStatusUpdateEvent(oldStatus, this.toLoanDetails())));
                     investmentByLenderName.keySet().forEach(name -> getAccount().executeTransaction(BilateralTransaction.Type.TRANSFER,
                             admin.getCustomerManager().getCustomersByName().get(name).getAccount(), investmentByLenderName.get(name), getInvestmentInterest(investmentByLenderName.get(name))));
                 }
@@ -508,15 +516,9 @@ public class LoanManager implements TimeAdvancementListener {
         }
 
         @Override
-        protected List<UnilateralTransactionListener> getUnilateralTransactionListenerList() {
-            return unilateralTransactionListeners;
+        public EventListenerList getEventListeners() {
+            return eventListeners;
         }
-
-        @Override
-        protected List<BilateralTransactionListener> getBilateralTransactionListenerList() {
-            return bilateralTransactionListeners;
-        }
-
     }
 
 }

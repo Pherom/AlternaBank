@@ -1,6 +1,11 @@
 package com.alternabank.graphical.ui.application;
 
+import com.alternabank.engine.loan.dto.LoanDetails;
+import com.alternabank.engine.loan.event.LoanStatusUpdateEvent;
+import com.alternabank.engine.loan.event.listener.LoanStatusUpdateListener;
 import com.alternabank.engine.time.TimeManager;
+import com.alternabank.engine.time.event.TimeAdvancementEvent;
+import com.alternabank.engine.time.event.listener.TimeAdvancementListener;
 import com.alternabank.engine.user.User;
 import com.alternabank.engine.user.UserManager;
 import com.alternabank.engine.xml.XMLLoader;
@@ -10,47 +15,57 @@ import com.alternabank.graphical.ui.application.admin.AdminViewController;
 import com.alternabank.graphical.ui.application.header.HeaderController;
 import com.alternabank.graphical.ui.application.user.UserViewController;
 import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 
 import javafx.event.ActionEvent;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
+import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ResourceBundle;
 
-public class AppController implements Initializable, XMLLoadSuccessListener, XMLCustomerLoadFailureListener, XMLCategoryLoadFailureListener, XMLFileLoadFailureListener, XMLLoanLoadFailureListener {
+public class AppController implements Initializable, XMLLoadSuccessListener, XMLCustomerLoadFailureListener, XMLCategoryLoadFailureListener, XMLFileLoadFailureListener, XMLLoanLoadFailureListener, TimeAdvancementListener, LoanStatusUpdateListener {
 
     @FXML private BorderPane appComponent;
     @FXML private HeaderController headerComponentController;
     @FXML private BorderPane adminViewComponent;
-    @FXML private BorderPane userViewComponent;
+    @FXML private TabPane userViewComponent;
     @FXML private AdminViewController adminViewComponentController;
     @FXML private UserViewController userViewComponentController;
     private final StringProperty loadedFilePathStringProperty = new SimpleStringProperty();
     private final StringProperty currentTimeStringProperty = new SimpleStringProperty();
 
     public void onUserSelection(User selectedUser) {
-        if(selectedUser == UserManager.getInstance().getAdmin())
-            appComponent.setCenter(adminViewComponent);
-        else appComponent.setCenter(userViewComponent);
+        if(selectedUser == UserManager.getInstance().getAdmin()) {
+            userViewComponent.setVisible(false);
+            adminViewComponent.setVisible(true);
+        }
+        else
+        {
+            adminViewComponent.setVisible(false);
+            userViewComponentController.populate(selectedUser);
+            userViewComponent.setVisible(true);
+        }
         UserManager.getInstance().setCurrentUser(selectedUser);
     }
 
-    private void updateCurrentTimeStringProperty() {
-        TimeManager timeManager = UserManager.getInstance().getAdmin().getTimeManager();
-        String timeUnitName = timeManager.getTimeUnitName();
-        int currentTime = timeManager.getCurrentTime();
-        currentTimeStringProperty.set(timeUnitName + " " + currentTime);
+    private void updateCurrentTimeStringProperty(int newTime) {
+        String timeUnitName = UserManager.getInstance().getAdmin().getTimeManager().getTimeUnitName();
+        currentTimeStringProperty.set(timeUnitName + " " + newTime);
     }
 
     public void onAdvanceTimeRequest(ActionEvent event) {
         UserManager.getInstance().getAdmin().advanceTime();
-        updateCurrentTimeStringProperty();
     }
 
     public void onLoadFileRequest(ActionEvent event) {
@@ -73,6 +88,11 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
         controller.setAppController(this);
     }
 
+    public void setUserViewController(UserViewController controller) {
+        this.userViewComponentController = controller;
+        controller.setAppController(this);
+    }
+
     private void registerAsXMLLoadListener() {
         XMLLoader xmlFileLoader = UserManager.getInstance().getAdmin().getXmlFileLoader();
         xmlFileLoader.addLoadSuccessListener(this);
@@ -81,12 +101,23 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
         xmlFileLoader.addLoanLoadFailureListener(this);
     }
 
+    private void registerAsTimeAdvancementListener() {
+        UserManager.getInstance().getAdmin().getTimeManager().addTimeAdvancementListener(this);
+    }
+
+    private void registerAsLoanStatusUpdateListener() {
+        UserManager.getInstance().getAdmin().getLoanManager().addLoanStatusUpdateListener(this);
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         registerAsXMLLoadListener();
-        updateCurrentTimeStringProperty();
+        registerAsTimeAdvancementListener();
+        registerAsLoanStatusUpdateListener();
+        updateCurrentTimeStringProperty(UserManager.getInstance().getAdmin().getTimeManager().getCurrentTime());
         setHeaderController(headerComponentController);
         setAdminViewController(adminViewComponentController);
+        setUserViewController(userViewComponentController);
         headerComponentController.getLoadedXMLFileTextFieldStringProperty().bind(loadedFilePathStringProperty);
         headerComponentController.getCurrentTimeLabelStringProperty().bind(currentTimeStringProperty);
     }
@@ -104,6 +135,7 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
         Path loadedFilePath = event.getSource().getLastLoadedFilePath();
         loadedFilePathStringProperty.set(loadedFilePath.toString());
         adminViewComponentController.loadedSuccessfully(event);
+        adminViewComponentController.populateLoanView(event.getSource().getAdmin().getLoanManager().getLoanDetails());
         headerComponentController.loadedSuccessfully(event);
         showLoadSuccessAlert(loadedFilePath.getFileName());
     }
@@ -138,5 +170,15 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
     public void loanLoadFailed(XMLLoanLoadFailureEvent event) {
         showLoadFailureAlert(event.getErrorMessage());
         event.getSource().stopLoading();
+    }
+
+    @Override
+    public void timeAdvanced(TimeAdvancementEvent event) {
+        updateCurrentTimeStringProperty(event.getTimeAfter());
+    }
+
+    @Override
+    public void statusUpdated(LoanStatusUpdateEvent event) {
+        adminViewComponentController.populateLoanView(UserManager.getInstance().getAdmin().getLoanManager().getLoanDetails());
     }
 }

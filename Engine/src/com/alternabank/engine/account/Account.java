@@ -7,6 +7,8 @@ import com.alternabank.engine.transaction.UnilateralTransaction;
 import com.alternabank.engine.transaction.event.listener.BilateralTransactionListener;
 import com.alternabank.engine.transaction.event.listener.UnilateralTransactionListener;
 
+import javax.swing.event.EventListenerList;
+import java.util.EventListener;
 import java.util.List;
 import java.util.Set;
 
@@ -30,9 +32,7 @@ public interface Account {
 
     void addBilateralTransactionListener(BilateralTransactionListener listener);
 
-    List<UnilateralTransactionListener> getUnilateralTransactionListeners();
-
-    List<BilateralTransactionListener> getBilateralTransactionListeners();
+    EventListenerList getEventListeners();
 
     interface Ledger {
 
