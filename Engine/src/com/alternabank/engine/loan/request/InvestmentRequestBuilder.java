@@ -1,6 +1,7 @@
 package com.alternabank.engine.loan.request;
 
 import com.alternabank.engine.loan.LoanManager;
+import com.alternabank.engine.user.UserManager;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -13,7 +14,7 @@ public class InvestmentRequestBuilder {
 
     private String lenderName;
     private double total;
-    private Set<String> categoriesOfInterest = LoanManager.getInstance().getAvailableCategories();
+    private Set<String> categoriesOfInterest = UserManager.getInstance().getAdmin().getLoanManager().getAvailableCategories();
     private double minimumInterestPerTimeUnit = DEFAULT_VALUE;
     private double minimumInterestRate = DEFAULT_VALUE;
     private int minimumLoanTerm = DEFAULT_VALUE;

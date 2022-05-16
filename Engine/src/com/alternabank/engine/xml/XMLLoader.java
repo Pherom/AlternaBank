@@ -1,11 +1,14 @@
 package com.alternabank.engine.xml;
 
+import com.alternabank.engine.user.Admin;
 import com.alternabank.engine.xml.event.listener.*;
 
 import java.nio.file.Path;
 import java.util.List;
 
 public interface XMLLoader {
+
+    Admin getAdmin();
 
     void loadSystemFromFile(Path filePath);
 

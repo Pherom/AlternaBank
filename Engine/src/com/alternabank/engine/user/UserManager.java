@@ -32,15 +32,19 @@ public class UserManager {
     }
 
     public User getUser(String name) {
-        return CustomerManager.getInstance().getCustomersByName().get(name);
+        return admin.getCustomerManager().getCustomersByName().get(name);
     }
 
     public Set<User> getUsers() {
-        return new HashSet<>(CustomerManager.getInstance().getCustomersByName().values());
+        return new HashSet<>(admin.getCustomerManager().getCustomersByName().values());
     }
 
     public User getCurrentUser() {
         return currentUser;
+    }
+
+    public void setCurrentUser(User user) {
+        currentUser = user;
     }
 
 }

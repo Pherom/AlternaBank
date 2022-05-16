@@ -3,6 +3,7 @@ package com.alternabank.engine.xml.event;
 import com.alternabank.engine.customer.CustomerManager;
 import com.alternabank.engine.loan.Loan;
 import com.alternabank.engine.loan.LoanManager;
+import com.alternabank.engine.user.UserManager;
 import com.alternabank.engine.xml.XMLLoader;
 import com.alternabank.engine.xml.generated.AbsLoan;
 
@@ -20,11 +21,11 @@ public class XMLLoanLoadFailureEvent extends XMLLoadFailureEvent<AbsLoan> {
 
         EMPTY_LOAN_ID((absLoan) -> absLoan.getId().isEmpty(),
                 (absLoan) -> "Found loan with empty ID!"),
-        LOAN_ID_COLLISION((absLoan) -> LoanManager.getInstance().loanExists(absLoan.getId()),
+        LOAN_ID_COLLISION((absLoan) -> UserManager.getInstance().getAdmin().getLoanManager().loanExists(absLoan.getId()),
                 (absLoan) -> String.format("Found multiple loans with identical ID \"%s\"!", absLoan.getId())),
-        NO_MATCHING_LOAN_CATEGORY((absLoan) -> !LoanManager.getInstance().getAvailableCategories().contains(absLoan.getAbsCategory()),
+        NO_MATCHING_LOAN_CATEGORY((absLoan) -> !UserManager.getInstance().getAdmin().getLoanManager().getAvailableCategories().contains(absLoan.getAbsCategory()),
                 (absLoan) -> String.format("Loan with id: \"%s\" has \"%s\" set as category but no matching loan category found!", absLoan.getId(), absLoan.getAbsCategory())),
-        NO_MATCHING_BORROWER((absLoan) -> !CustomerManager.getInstance().customerExists(absLoan.getAbsOwner()),
+        NO_MATCHING_BORROWER((absLoan) -> !UserManager.getInstance().getAdmin().getCustomerManager().customerExists(absLoan.getAbsOwner()),
                 (absLoan) -> String.format("Loan with id: \"%s\" has \"%s\" set as owner but no matching customer found!", absLoan.getId(), absLoan.getAbsOwner())),
         LOAN_CAPITAL_TOO_LOW((absLoan) -> absLoan.getAbsCapital() <= Loan.CAPITAL_LOWER_BOUND,
                 (absLoan) -> String.format("Loan with id: \"%s\" has \"%.2f\" set as capital which is lower than the lower bound (%.2f)!", absLoan.getId(), (double)absLoan.getAbsCapital(), Loan.CAPITAL_LOWER_BOUND)),

@@ -1,6 +1,7 @@
 package com.alternabank.engine.transaction;
 
 import com.alternabank.engine.time.TimeManager;
+import com.alternabank.engine.user.UserManager;
 
 public class BilateralTransaction extends AbstractTransaction implements Transaction.Bilateral {
 
@@ -26,7 +27,7 @@ public class BilateralTransaction extends AbstractTransaction implements Transac
         double initiatorBalanceBefore = initiator.getBalance();
         double recipientBalanceBefore = recipient.getBalance();
         Status status = type.getOperation().transact(initiator, recipient, getTotal());
-        return new Record(TimeManager.getInstance().getCurrentTime(), initiator.getID(), initiatorBalanceBefore, initiator.getBalance(), recipient.getID(), recipientBalanceBefore, recipient.getBalance(), status);
+        return new Record(UserManager.getInstance().getAdmin().getTimeManager().getCurrentTime(), initiator.getID(), initiatorBalanceBefore, initiator.getBalance(), recipient.getID(), recipientBalanceBefore, recipient.getBalance(), status);
     }
 
     public class Record extends AbstractTransaction.Record implements Transaction.Record.Bilateral {
@@ -55,7 +56,7 @@ public class BilateralTransaction extends AbstractTransaction implements Transac
                             + "\tRecipient: %s (Balance: %.2f -> %.2f)" + System.lineSeparator()
                             + "\tTotal: %.2f (Principal: %.2f, Interest: %.2f)" + System.lineSeparator()
                             + "\tStatus: %s",
-                    TimeManager.getInstance().getTimeUnitName(),
+                    UserManager.getInstance().getAdmin().getTimeManager().getTimeUnitName(),
                     getExecutionTime(),
                     type, getInitiatorID(), getInitiatorBalanceBefore(), getInitiatorBalanceAfter(),
                     getRecipientID(), getRecipientBalanceBefore(), getRecipientBalanceAfter(),

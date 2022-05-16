@@ -4,6 +4,7 @@ import com.alternabank.engine.account.dto.AccountDetails;
 import com.alternabank.engine.customer.CustomerManager;
 import com.alternabank.engine.loan.LoanManager;
 import com.alternabank.engine.loan.dto.LoanDetails;
+import com.alternabank.engine.user.UserManager;
 
 import java.util.Collections;
 import java.util.Objects;
@@ -22,8 +23,8 @@ public class CustomerDetails {
         customerAsString = customer.toString();
         name = customer.getName();
         accountDetails = customer.getAccount().toAccountDetails();
-        postedLoanDetails = customer.getPostedLoansIDs().stream().map(loanID -> LoanManager.getInstance().getLoan(loanID).toLoanDetails()).collect(Collectors.toSet());
-        investedLoanDetails = customer.getInvestedLoansIDs().stream().map(loanID -> LoanManager.getInstance().getLoan(loanID).toLoanDetails()).collect(Collectors.toSet());
+        postedLoanDetails = customer.getPostedLoansIDs().stream().map(loanID -> UserManager.getInstance().getAdmin().getLoanManager().getLoan(loanID).toLoanDetails()).collect(Collectors.toSet());
+        investedLoanDetails = customer.getInvestedLoansIDs().stream().map(loanID -> UserManager.getInstance().getAdmin().getLoanManager().getLoan(loanID).toLoanDetails()).collect(Collectors.toSet());
     }
 
     public String getName() {

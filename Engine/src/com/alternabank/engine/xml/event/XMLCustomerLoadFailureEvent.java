@@ -1,6 +1,7 @@
 package com.alternabank.engine.xml.event;
 
 import com.alternabank.engine.customer.CustomerManager;
+import com.alternabank.engine.user.UserManager;
 import com.alternabank.engine.xml.XMLLoader;
 import com.alternabank.engine.xml.generated.AbsCustomer;
 
@@ -18,7 +19,7 @@ public class XMLCustomerLoadFailureEvent extends XMLLoadFailureEvent<AbsCustomer
 
         EMPTY_CUSTOMER_NAME((absCustomer) -> absCustomer.getName().isEmpty(),
                 (absCustomer) -> "Found customer with empty name!"),
-        CUSTOMER_NAME_COLLISION((absCustomer) -> CustomerManager.getInstance().customerExists(absCustomer.getName()),
+        CUSTOMER_NAME_COLLISION((absCustomer) -> UserManager.getInstance().getAdmin().getCustomerManager().customerExists(absCustomer.getName()),
                 (absCustomer) -> String.format("Found multiple customers with identical name \"%s\"", absCustomer.getName())),
         CUSTOMER_NEGATIVE_BALANCE((absCustomer) -> absCustomer.getAbsBalance() < 0,
                 (absCustomer) -> String.format("Customer named \"%s\" has a negative balance of \"%d\" which is not allowed", absCustomer.getName(), absCustomer.getAbsBalance()));

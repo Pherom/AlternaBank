@@ -8,8 +8,10 @@ import com.alternabank.engine.loan.Investment;
 import com.alternabank.engine.loan.Loan;
 import com.alternabank.engine.loan.LoanManager;
 import com.alternabank.engine.loan.request.LoanRequest;
+import com.alternabank.engine.transaction.UnilateralTransaction;
 import com.alternabank.engine.transaction.event.listener.BilateralTransactionListener;
 import com.alternabank.engine.transaction.event.listener.UnilateralTransactionListener;
+import com.alternabank.engine.user.Admin;
 import com.alternabank.engine.user.User;
 
 import java.util.*;
@@ -17,19 +19,18 @@ import java.util.stream.Collectors;
 
 public class CustomerManager {
 
-    private static CustomerManager instance = null;
+    private final Admin admin;
     private final Map<String, Customer> customersByName;
     private final List<UnilateralTransactionListener> unilateralTransactionListeners = new LinkedList<>();
     private final List<BilateralTransactionListener> bilateralTransactionListeners = new LinkedList<>();
 
-    private CustomerManager() {
+    public CustomerManager(Admin admin) {
+        this.admin = admin;
         customersByName = new HashMap<>();
     }
 
-    public static CustomerManager getInstance() {
-        if(instance == null)
-            instance = new CustomerManager();
-        return instance;
+    public Admin getAdmin() {
+        return admin;
     }
 
     public CustomerManagerState createCustomerManagerState() {
@@ -71,7 +72,7 @@ public class CustomerManager {
     public boolean removeCustomer(String name) {
         boolean success = false;
 
-        if(LoanManager.getInstance().getLoansByID().values().stream().noneMatch(loan ->
+        if(admin.getLoanManager().getLoansByID().values().stream().noneMatch(loan ->
                 loan.getOriginalRequest().getBorrowerName().equals(name) ||
                         loan.getInvestmentByLenderName().containsKey(name))) {
             customersByName.remove(name);
@@ -101,6 +102,32 @@ public class CustomerManager {
         return Collections.unmodifiableList(bilateralTransactionListeners);
     }
 
+    public Set<String> getCustomerNames() {
+        return Collections.unmodifiableSet(customersByName.keySet());
+    }
+
+    public Set<CustomerDetails> getCustomerDetails() {
+        return customersByName.values().stream().map(CustomerManager.Customer::toCustomerDetails).collect(Collectors.toSet());
+    }
+
+    public void depositFunds(String customerName, double total) {
+        if(customerExists(customerName)) {
+            CustomerManager.Customer customer = customersByName.get(customerName);
+            customer.getAccount().executeTransaction(UnilateralTransaction.Type.DEPOSIT, total);
+        }
+    }
+
+    public void withdrawFunds(String customerName, double total) {
+        if(customerExists(customerName)) {
+            CustomerManager.Customer customer = customersByName.get(customerName);
+            customer.getAccount().executeTransaction(UnilateralTransaction.Type.WITHDRAWAL, total);
+        }
+    }
+
+    public boolean postInvestmentRequest(Investment.Request investmentRequest) {
+        return customersByName.get((investmentRequest.getLenderName())).postInvestmentRequest(investmentRequest);
+    }
+
     public class Customer extends AbstractOwnedAccount.Owner implements Lender, Borrower, User {
 
         private final Set<String> postedLoansIDs = new HashSet<>();
@@ -117,7 +144,7 @@ public class CustomerManager {
         @Override
         public boolean postLoanRequest(LoanRequest loanRequest) {
             boolean success;
-            Loan loan = LoanManager.getInstance().createLoan(loanRequest);
+            Loan loan = admin.getLoanManager().createLoan(loanRequest);
 
             success = loan != null;
 
@@ -136,7 +163,7 @@ public class CustomerManager {
         @Override
         public boolean postInvestmentRequest(Investment.Request investmentRequest) {
             boolean success;
-            Investment investment = LoanManager.getInstance().createInvestment(investmentRequest);
+            Investment investment = admin.getLoanManager().createInvestment(investmentRequest);
 
             success = investment != null;
 
@@ -165,15 +192,20 @@ public class CustomerManager {
 
             if(!postedLoansIDs.isEmpty()) {
                 stringBuilder.append(System.lineSeparator()).append("\tPOSTED LOANS:");
-                postedLoansIDs.forEach(loanID -> stringBuilder.append(System.lineSeparator()).append("\t\t").append(LoanManager.getInstance().getLoan(loanID).toShortString().replace(System.lineSeparator(), System.lineSeparator() + "\t\t")));
+                postedLoansIDs.forEach(loanID -> stringBuilder.append(System.lineSeparator()).append("\t\t").append(admin.getLoanManager().getLoan(loanID).toShortString().replace(System.lineSeparator(), System.lineSeparator() + "\t\t")));
             }
 
             if(!investedLoansIDs.isEmpty()) {
                 stringBuilder.append(System.lineSeparator()).append("\tINVESTED LOANS:");
-                investedLoansIDs.forEach(loanID -> stringBuilder.append(System.lineSeparator()).append("\t\t").append(LoanManager.getInstance().getLoan(loanID).toShortString().replace(System.lineSeparator(), System.lineSeparator() + "\t\t")));
+                investedLoansIDs.forEach(loanID -> stringBuilder.append(System.lineSeparator()).append("\t\t").append(admin.getLoanManager().getLoan(loanID).toShortString().replace(System.lineSeparator(), System.lineSeparator() + "\t\t")));
             }
 
             return stringBuilder.toString();
+        }
+
+        @Override
+        public void exitApplication() {
+            System.exit(0);
         }
     }
 

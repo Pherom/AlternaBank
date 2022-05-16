@@ -2,23 +2,23 @@ package com.alternabank.engine.time;
 
 import com.alternabank.engine.time.event.TimeAdvancementEvent;
 import com.alternabank.engine.time.event.listener.TimeAdvancementListener;
+import com.alternabank.engine.user.Admin;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public class TimeManager {
 
-    private static TimeManager instance = null;
+    private final Admin admin;
     private int currentTime = 0;
     private final Set<TimeAdvancementListener> timeAdvancementListeners = new HashSet<>();
 
-    public static TimeManager getInstance() {
-        if(instance == null)
-            instance = new TimeManager();
-        return instance;
+    public TimeManager(Admin admin) {
+        this.admin = admin;
     }
 
-    private TimeManager() {
+    public Admin getAdmin() {
+        return admin;
     }
 
     public int getCurrentTime() {

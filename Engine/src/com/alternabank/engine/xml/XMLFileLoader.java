@@ -7,6 +7,7 @@ import com.alternabank.engine.loan.state.LoanManagerState;
 import com.alternabank.engine.loan.request.LoanRequest;
 import com.alternabank.engine.time.TimeManager;
 import com.alternabank.engine.transaction.UnilateralTransaction;
+import com.alternabank.engine.user.Admin;
 import com.alternabank.engine.xml.event.*;
 import com.alternabank.engine.xml.event.listener.*;
 import com.alternabank.engine.xml.generated.*;
@@ -23,21 +24,31 @@ import java.util.stream.Stream;
 
 public class XMLFileLoader implements XMLLoader{
 
+    private final Admin admin;
     private boolean resumeLoad = false;
     private Path filePath;
     private Path lastLoadedFilePath = null;
     private AbsDescriptor loadedDescriptor;
     private final EventListenerList eventListeners = new EventListenerList();
 
+    public XMLFileLoader(Admin admin) {
+        this.admin = admin;
+    }
+
+    @Override
+    public Admin getAdmin() {
+        return admin;
+    }
+
     @Override
     public void loadSystemFromFile(Path filePath) {
         this.filePath = filePath;
         boolean validFilePath = checkFilePath();
         if(validFilePath) {
-            CustomerManagerState customerManagerState = CustomerManager.getInstance().createCustomerManagerState();
-            LoanManagerState loanManagerState = LoanManager.getInstance().createLoanManagerState();
-            LoanManager.getInstance().reset();
-            CustomerManager.getInstance().reset();
+            CustomerManagerState customerManagerState = admin.getCustomerManager().createCustomerManagerState();
+            LoanManagerState loanManagerState = admin.getLoanManager().createLoanManagerState();
+            admin.getLoanManager().reset();
+            admin.getCustomerManager().reset();
             resumeLoad = true;
             loadDescriptor();
             loadCustomers();
@@ -49,12 +60,12 @@ public class XMLFileLoader implements XMLLoader{
             if (resumeLoad) {
                 lastLoadedFilePath = filePath;
                 resumeLoad = false;
-                TimeManager.getInstance().resetCurrentTime();
+                admin.getTimeManager().resetCurrentTime();
                 Arrays.stream(eventListeners.getListeners(XMLLoadSuccessListener.class)).forEach(listener -> listener.loadedSuccessfully(new XMLLoadSuccessEvent(this)));
             }
             else {
-                CustomerManager.getInstance().restoreCustomerManager(customerManagerState);
-                LoanManager.getInstance().restoreLoanManager(loanManagerState);
+                admin.getCustomerManager().restoreCustomerManager(customerManagerState);
+                admin.getLoanManager().restoreLoanManager(loanManagerState);
             }
         }
     }
@@ -123,7 +134,7 @@ public class XMLFileLoader implements XMLLoader{
         loadedDescriptor.getAbsCategories().getAbsCategory().stream()
                 .filter(loadedCategory -> resumeLoad && checkCategory(loadedCategory))
                 .forEach(loadedCategory -> {
-                    LoanManager.getInstance().addCategory(loadedCategory); });
+                    admin.getLoanManager().addCategory(loadedCategory); });
     }
 
     private boolean checkCategory(String loadedCategory) {
@@ -143,7 +154,7 @@ public class XMLFileLoader implements XMLLoader{
         loadedDescriptor.getAbsCustomers().getAbsCustomer().stream()
                 .filter(loadedCustomer -> resumeLoad && checkCustomer(loadedCustomer))
                 .forEach(loadedCustomer -> {
-                    CustomerManager.getInstance().createCustomer((loadedCustomer.getName()))
+                    admin.getCustomerManager().createCustomer((loadedCustomer.getName()))
                         .getAccount().executeTransaction(UnilateralTransaction.Type.DEPOSIT, loadedCustomer.getAbsBalance()); });
     }
 
@@ -166,7 +177,7 @@ public class XMLFileLoader implements XMLLoader{
         loadedDescriptor.getAbsLoans().getAbsLoan().stream()
                 .filter(loadedLoan -> resumeLoad && checkLoan(loadedLoan))
                 .forEach(loadedLoan -> {
-                    CustomerManager.getInstance().getCustomersByName().get(loadedLoan.getAbsOwner())
+                    admin.getCustomerManager().getCustomersByName().get(loadedLoan.getAbsOwner())
                         .postLoanRequest(LoanRequest.createByInterestPerPayment(loadedLoan.getAbsOwner(), loadedLoan.getAbsCategory(),
                                 loadedLoan.getAbsCapital(), loadedLoan.getAbsPaysEveryYaz(), loadedLoan.getAbsIntristPerPayment(),
                                 loadedLoan.getAbsTotalYazTime(), loadedLoan.getId())); });

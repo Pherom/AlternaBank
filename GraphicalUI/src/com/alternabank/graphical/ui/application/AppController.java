@@ -1,14 +1,15 @@
 package com.alternabank.graphical.ui.application;
 
-import com.alternabank.engine.AlternaBankEngine;
+import com.alternabank.engine.time.TimeManager;
 import com.alternabank.engine.user.User;
+import com.alternabank.engine.user.UserManager;
+import com.alternabank.engine.xml.XMLLoader;
 import com.alternabank.engine.xml.event.*;
 import com.alternabank.engine.xml.event.listener.*;
 import com.alternabank.graphical.ui.application.admin.AdminViewController;
 import com.alternabank.graphical.ui.application.header.HeaderController;
 import com.alternabank.graphical.ui.application.user.UserViewController;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 
 import javafx.event.ActionEvent;
@@ -34,17 +35,21 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
     private final StringProperty currentTimeStringProperty = new SimpleStringProperty();
 
     public void onUserSelection(User selectedUser) {
-        if(selectedUser == AlternaBankEngine.getInstance().getAdmin())
+        if(selectedUser == UserManager.getInstance().getAdmin())
             appComponent.setCenter(adminViewComponent);
         else appComponent.setCenter(userViewComponent);
+        UserManager.getInstance().setCurrentUser(selectedUser);
     }
 
     private void updateCurrentTimeStringProperty() {
-        currentTimeStringProperty.set(AlternaBankEngine.getInstance().getTimeUnit() + " " + AlternaBankEngine.getInstance().getCurrentTime());
+        TimeManager timeManager = UserManager.getInstance().getAdmin().getTimeManager();
+        String timeUnitName = timeManager.getTimeUnitName();
+        int currentTime = timeManager.getCurrentTime();
+        currentTimeStringProperty.set(timeUnitName + " " + currentTime);
     }
 
     public void onAdvanceTimeRequest(ActionEvent event) {
-        AlternaBankEngine.getInstance().advanceTime();
+        UserManager.getInstance().getAdmin().advanceTime();
         updateCurrentTimeStringProperty();
     }
 
@@ -54,7 +59,7 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
         fileChooser.getExtensionFilters().add(extFilter);
         File chosenFile = fileChooser.showOpenDialog(appComponent.getScene().getWindow());
         if(chosenFile != null) {
-            AlternaBankEngine.getInstance().loadFromXMLFile(chosenFile.toPath());
+            UserManager.getInstance().getAdmin().getXmlFileLoader().loadSystemFromFile(chosenFile.toPath());
         }
     }
 
@@ -69,10 +74,11 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
     }
 
     private void registerAsXMLLoadListener() {
-        AlternaBankEngine.getInstance().addXMLLoadSuccessListener(this);
-        AlternaBankEngine.getInstance().addXMLCategoryLoadFailureListener(this);
-        AlternaBankEngine.getInstance().addXMLCustomerLoadFailureListener(this);
-        AlternaBankEngine.getInstance().addXMLLoanLoadFailureListener(this);
+        XMLLoader xmlFileLoader = UserManager.getInstance().getAdmin().getXmlFileLoader();
+        xmlFileLoader.addLoadSuccessListener(this);
+        xmlFileLoader.addCategoryLoadFailureListener(this);
+        xmlFileLoader.addCustomerLoadFailureListener(this);
+        xmlFileLoader.addLoanLoadFailureListener(this);
     }
 
     @Override

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<GridPane id="header" fx:id="headerComponent" hgap="10.0" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="100.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.header.HeaderController">
+<GridPane id="header" fx:id="headerComponent" hgap="10.0" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="100.0" prefWidth="600.0" stylesheets="@Header.css" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.header.HeaderController">
   <columnConstraints>
     <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="100.0" />
     <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
@@ -45,7 +45,7 @@
             <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
          </padding>
       </VBox>
-      <ChoiceBox id="userSelection" fx:id="userSelectionChoiceBox" disable="true" prefHeight="116.0" prefWidth="100.0" stylesheets="@Header.css" />
+      <ComboBox id="userSelection" fx:id="userSelectionComboBox" disable="true" prefHeight="117.0" prefWidth="100.0" />
    </children>
    <padding>
       <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />

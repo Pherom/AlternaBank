@@ -4,4 +4,6 @@ public interface User {
 
     String getName();
 
+    void exitApplication();
+
 }

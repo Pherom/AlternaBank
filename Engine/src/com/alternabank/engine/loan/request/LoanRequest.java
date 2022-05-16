@@ -2,6 +2,7 @@ package com.alternabank.engine.loan.request;
 
 import com.alternabank.engine.loan.Loan;
 import com.alternabank.engine.time.TimeManager;
+import com.alternabank.engine.user.UserManager;
 
 import java.util.Objects;
 
@@ -105,7 +106,7 @@ public class LoanRequest implements Loan.Request {
 
     @Override
     public String toString() {
-        String timeUnit = TimeManager.getInstance().getTimeUnitName();
+        String timeUnit = UserManager.getInstance().getAdmin().getTimeManager().getTimeUnitName();
         return String.format(
                 "LOAN DETAILS:" + System.lineSeparator()
                         + "\tID: %s" + System.lineSeparator()
