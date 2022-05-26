@@ -2,27 +2,24 @@ package com.alternabank.graphical.ui.application.loan;
 
 import com.alternabank.engine.loan.Loan;
 import com.alternabank.engine.loan.dto.LoanDetails;
-import com.alternabank.engine.loan.event.LoanStatusUpdateEvent;
+import com.alternabank.graphical.ui.application.loan.pending.PendingLoanInformationViewController;
 import javafx.beans.property.ListProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.beans.property.SimpleListProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.paint.Color;
 
 import java.net.URL;
-import java.text.NumberFormat;
-import java.util.Observable;
 import java.util.ResourceBundle;
 import java.util.Set;
 
 public class LoanViewController implements Initializable {
+
+    private final ListProperty<LoanDetails> loanDetails = new SimpleListProperty<>();
 
     @FXML
     private TableColumn<LoanDetails, String> loanBorrowerTableColumn;
@@ -32,9 +29,6 @@ public class LoanViewController implements Initializable {
 
     @FXML
     private TableColumn<LoanDetails, String> loanCategoryTableColumn;
-
-    @FXML
-    private ListView<?> loanDetailsListView;
 
     @FXML
     private TableColumn<LoanDetails, String> loanIDTableColumn;
@@ -51,12 +45,25 @@ public class LoanViewController implements Initializable {
     @FXML
     private TableColumn<LoanDetails, Double> loanTotalTableColumn;
 
-    public void populate(Set<LoanDetails> loanDetails) {
-        loanTableView.setItems(FXCollections.observableArrayList(loanDetails));
+    @FXML
+    private Tab activeStageInformationTab;
+
+    @FXML
+    private Tab riskStageInformationTab;
+
+    @FXML
+    private Tab finishedStageInformationTab;
+
+    @FXML
+    private PendingLoanInformationViewController pendingLoanInformationViewComponentController;
+
+    public ListProperty<LoanDetails> loanDetailsProperty() {
+        return loanDetails;
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        loanTableView.itemsProperty().bind(loanDetails);
         loanIDTableColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         loanBorrowerTableColumn.setCellValueFactory(new PropertyValueFactory<>("borrowerName"));
         loanCategoryTableColumn.setCellValueFactory(new PropertyValueFactory<>("category"));
@@ -64,6 +71,36 @@ public class LoanViewController implements Initializable {
         setLoanInterestTableColumnFactories(loanInterestTableColumn);
         loanTotalTableColumn.setCellValueFactory(new PropertyValueFactory<>("total"));
         setLoanStatusTableColumnFactories(loanStatusTableColumn);
+        loanTableView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<LoanDetails>() {
+            @Override
+            public void changed(ObservableValue<? extends LoanDetails> observable, LoanDetails oldValue, LoanDetails newValue) {
+                if(newValue != null)
+                    onLoanSelected(newValue);
+            }
+        });
+    }
+
+    private void makeTabsAvailableBasedOnLoanStatus(Loan.Status status) {
+        activeStageInformationTab.setDisable(true);
+        riskStageInformationTab.setDisable(true);
+        finishedStageInformationTab.setDisable(true);
+
+        switch (status) {
+            case RISK:
+                riskStageInformationTab.setDisable(false);
+                activeStageInformationTab.setDisable(false);
+                break;
+            case FINISHED:
+                finishedStageInformationTab.setDisable(false);
+            case ACTIVE:
+                activeStageInformationTab.setDisable(false);
+                break;
+        }
+    }
+
+    public void onLoanSelected(LoanDetails selectedLoanDetails) {
+        makeTabsAvailableBasedOnLoanStatus(selectedLoanDetails.getStatus());
+        pendingLoanInformationViewComponentController.populate(selectedLoanDetails);
     }
 
     private void setLoanInterestTableColumnFactories(TableColumn<LoanDetails, Double> loanInterestTableColumn) {

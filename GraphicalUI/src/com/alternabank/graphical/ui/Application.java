@@ -27,7 +27,7 @@ public class Application extends javafx.application.Application {
         fxmlLoader.setLocation(url);
         Parent root = fxmlLoader.load(url.openStream());
 
-        Scene scene = new Scene(root, 1000, 630);
+        Scene scene = new Scene(root, 1300, 710);
         primaryStage.setScene(scene);
         primaryStage.show();
     }

@@ -5,7 +5,8 @@ import com.alternabank.engine.user.User;
 import com.alternabank.engine.user.UserManager;
 import com.alternabank.engine.xml.event.XMLLoadSuccessEvent;
 import com.alternabank.graphical.ui.application.AppController;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -31,11 +32,11 @@ public class HeaderController implements Initializable {
 
     public void setAppController(AppController controller) {
         this.appController = controller;
+        userSelectionComboBox.itemsProperty().bind(appController.availableUsersProperty());
+        appController.selectedUserProperty().bindBidirectional(userSelectionComboBox.valueProperty());
     }
 
     public void loadedSuccessfully(XMLLoadSuccessEvent event) {
-        userSelectionComboBox.getItems().remove(1, userSelectionComboBox.getItems().size());
-        userSelectionComboBox.getItems().addAll(UserManager.getInstance().getUsers());
         userSelectionComboBox.setDisable(false);
     }
 
@@ -57,12 +58,5 @@ public class HeaderController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setUserSelectionComboBoxConverter();
-        User admin = UserManager.getInstance().getAdmin();
-        userSelectionComboBox.getItems().add(admin);
-        userSelectionComboBox.setValue(admin);
-        userSelectionComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-            boolean adminSelected = userSelectionComboBox.getSelectionModel().isSelected(0);
-            appController.onUserSelection(adminSelected ? UserManager.getInstance().getAdmin() : newValue);
-        });
     }
 }

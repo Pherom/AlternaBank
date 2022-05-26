@@ -1,28 +1,30 @@
 package com.alternabank.graphical.ui.application.admin;
 
-import com.alternabank.engine.loan.dto.LoanDetails;
-import com.alternabank.engine.loan.event.LoanStatusUpdateEvent;
+import com.alternabank.engine.customer.CustomerManager;
+import com.alternabank.engine.customer.dto.CustomerDetails;
+import com.alternabank.engine.transaction.event.BilateralTransactionEvent;
+import com.alternabank.engine.transaction.event.UnilateralTransactionEvent;
+import com.alternabank.engine.user.UserManager;
 import com.alternabank.engine.xml.event.XMLLoadSuccessEvent;
-import com.alternabank.engine.xml.event.listener.XMLLoadSuccessListener;
 import com.alternabank.graphical.ui.application.admin.header.AdminViewHeaderController;
 import com.alternabank.graphical.ui.application.AppController;
 import com.alternabank.graphical.ui.application.customer.CustomerViewController;
 import com.alternabank.graphical.ui.application.loan.LoanViewController;
-import javafx.beans.property.ListProperty;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableColumn;
+import javafx.scene.layout.BorderPane;
 
 import java.net.URL;
-import java.util.Observable;
 import java.util.ResourceBundle;
 import java.util.Set;
 
 public class AdminViewController implements Initializable {
 
-    @FXML private AppController appComponentController;
+    private AppController appComponentController;
     @FXML private AdminViewHeaderController adminViewHeaderComponentController;
 
     @FXML private LoanViewController loanViewComponentController;
@@ -30,11 +32,8 @@ public class AdminViewController implements Initializable {
 
     public void setAppController(AppController controller) {
         this.appComponentController = controller;
-    }
-
-    public void setAdminViewHeaderController(AdminViewHeaderController controller) {
-        this.adminViewHeaderComponentController = controller;
-        controller.setAdminViewController(this);
+        loanViewComponentController.loanDetailsProperty().bind(appComponentController.loanDetailsProperty());
+        customerViewComponentController.customerDetailsProperty().bind(appComponentController.customerDetailsProperty());
     }
 
     public void onAdvanceTimeRequest(ActionEvent event) {
@@ -49,12 +48,8 @@ public class AdminViewController implements Initializable {
         adminViewHeaderComponentController.loadedSuccessfully(event);
     }
 
-    public void populateLoanView(Set<LoanDetails> loanDetails) {
-        loanViewComponentController.populate(loanDetails);
-    }
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        setAdminViewHeaderController(adminViewHeaderComponentController);
+        adminViewHeaderComponentController.setAdminViewController(this);
     }
 }

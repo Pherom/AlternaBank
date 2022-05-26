@@ -2,6 +2,7 @@ package com.alternabank.engine.customer.dto;
 
 import com.alternabank.engine.account.dto.AccountDetails;
 import com.alternabank.engine.customer.CustomerManager;
+import com.alternabank.engine.loan.Loan;
 import com.alternabank.engine.loan.LoanManager;
 import com.alternabank.engine.loan.dto.LoanDetails;
 import com.alternabank.engine.user.UserManager;
@@ -41,6 +42,14 @@ public class CustomerDetails {
 
     public Set<LoanDetails> getInvestedLoanDetails() {
         return Collections.unmodifiableSet(investedLoanDetails);
+    }
+
+    public Set<LoanDetails> getPostedLoanDetailsByStatus(Loan.Status status) {
+        return postedLoanDetails.stream().filter(loanDetails -> loanDetails.getStatus() == status).collect(Collectors.toSet());
+    }
+
+    public Set<LoanDetails> getInvestedLoanDetailsByStatus(Loan.Status status) {
+        return investedLoanDetails.stream().filter(loanDetails -> loanDetails.getStatus() == status).collect(Collectors.toSet());
     }
 
     @Override

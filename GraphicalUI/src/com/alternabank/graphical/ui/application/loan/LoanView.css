@@ -5,17 +5,17 @@
 
 /*noinspection CssInvalidPseudoSelector*/
 .table-view .status-cell:active {
-    -fx-background-color: MEDIUMSEAGREEN;
+    -fx-background-color: SEAGREEN;
 }
 
 /*noinspection CssInvalidPseudoSelector*/
 .table-view .status-cell:risk {
-    -fx-background-color: DARKRED;
+    -fx-background-color: CRIMSON;
 }
 
 /*noinspection CssInvalidPseudoSelector*/
 .table-view .status-cell:finished {
-    -fx-background-color: DARKGREEN;
+    -fx-background-color: GREEN;
 }
 
 .table-view .status-cell {

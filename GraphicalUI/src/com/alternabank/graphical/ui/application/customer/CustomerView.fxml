@@ -3,8 +3,28 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 
-<TableView id="customerView" fx:id="customerViewComponent" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.customer.CustomerViewController">
+<TableView id="customerView" fx:id="customerViewComponent" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.customer.CustomerViewController">
   <columns>
     <TableColumn id="customerNameColumn" fx:id="customerNameTableColumn" prefWidth="75.0" text="Name" />
+      <TableColumn id="customerBalanceColumn" fx:id="customerBalanceTableColumn" prefWidth="75.0" text="Balance" />
+      <TableColumn id="borrowedLoansColumn" fx:id="borrowedLoansTableColumn" prefWidth="75.0" text="Borrowed Loans">
+         <columns>
+            <TableColumn id="pendingBorrowedLoansColumn" fx:id="pendingBorrowedLoansTableColumn" prefWidth="75.0" text="Pending" />
+            <TableColumn id="activeBorrowedLoansColumn" fx:id="activeBorrowedLoansTableColumn" prefWidth="75.0" text="Active" />
+            <TableColumn id="riskBorrowedLoansColumn" fx:id="riskBorrowedLoansTableColumn" prefWidth="75.0" text="Risk" />
+            <TableColumn id="finishedBorrowedLoansColumn" fx:id="finishedBorrowedLoansTableColumn" prefWidth="75.0" text="Finished" />
+         </columns>
+      </TableColumn>
+      <TableColumn id="lendedLoansColumn" fx:id="lendedLoansTableColumn" prefWidth="75.0" text="Lended Loans">
+         <columns>
+            <TableColumn id="pendingLendedLoansColumn" fx:id="pendingLendedLoansTableColumn" prefWidth="75.0" text="Pending" />
+            <TableColumn id="activeLendedLoansColumn" fx:id="activeLendedLoansTableColumn" prefWidth="75.0" text="Active" />
+            <TableColumn id="riskLendedLoansColumn" fx:id="riskLendedLoansTableColumn" prefWidth="75.0" text="Risk" />
+            <TableColumn id="finishedLendedLoansColumn" fx:id="finishedLendedLoansTableColumn" prefWidth="75.0" text="Finished" />
+         </columns>
+      </TableColumn>
   </columns>
+   <columnResizePolicy>
+      <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+   </columnResizePolicy>
 </TableView>
