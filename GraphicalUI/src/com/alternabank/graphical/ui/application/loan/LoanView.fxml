@@ -6,9 +6,9 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 
-<SplitPane dividerPositions="0.46" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="240.0" prefWidth="895.0" stylesheets="@LoanView.css" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.loan.LoanViewController">
+<SplitPane dividerPositions="0.85" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="240.0" prefWidth="895.0" stylesheets="@LoanView.css" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.loan.LoanViewController">
   <items>
-      <TableView id="loan" fx:id="loanTableView" minWidth="595.0">
+      <TableView id="loan" fx:id="loanTableView" minWidth="0.0">
          <columns>
             <TableColumn id="loanIDColumn" fx:id="loanIDTableColumn" editable="false" prefWidth="130.0" text="ID" />
             <TableColumn id="loanBorrowerColumn" fx:id="loanBorrowerTableColumn" editable="false" prefWidth="75.0" text="Borrower" />

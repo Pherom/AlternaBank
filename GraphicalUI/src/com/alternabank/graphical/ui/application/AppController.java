@@ -53,6 +53,8 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
     private final ObjectProperty<User> selectedUser = new SimpleObjectProperty<>();
     private final ListProperty<User> availableUsers = new SimpleListProperty<>(FXCollections.observableArrayList());
 
+    private final ListProperty<String> availableLoanCategories = new SimpleListProperty<>(FXCollections.observableArrayList());
+
     public ListProperty<LoanDetails> loanDetailsProperty() {
         return loanDetails;
     }
@@ -71,6 +73,14 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
 
     public User getSelectedUser() {
         return selectedUser.getValue();
+    }
+
+    public void setSelectedUser(User user) {
+        selectedUser.set(user);
+    }
+
+    public ListProperty<String> availableLoanCategoriesProperty() {
+        return availableLoanCategories;
     }
 
     private void onUserSelection(User selectedUser) {
@@ -142,12 +152,7 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
 
         availableUsers.add(UserManager.getInstance().getAdmin());
         selectedUser.set(UserManager.getInstance().getAdmin());
-        selectedUser.addListener(new ChangeListener<User>() {
-            @Override
-            public void changed(ObservableValue<? extends User> observable, User oldValue, User newValue) {
-                onUserSelection(newValue);
-            }
-        });
+        selectedUser.addListener((observable, oldValue, newValue) -> onUserSelection(newValue));
     }
 
     private void showLoadSuccessAlert(Path fileName) {
@@ -163,11 +168,16 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
         loanDetails.set(FXCollections.observableList(new ArrayList<>(UserManager.getInstance().getAdmin().getLoanManager().getLoanDetails())));
     }
 
+    public void refreshAvailableLoanCategories() {
+        availableLoanCategories.set(FXCollections.observableList(new ArrayList<>(UserManager.getInstance().getAdmin().getLoanManager().getAvailableCategories())));
+    }
+
     @Override
     public void loadedSuccessfully(XMLLoadSuccessEvent event) {
         Path loadedFilePath = event.getSource().getLastLoadedFilePath();
         loadedFilePathStringProperty.set(loadedFilePath.toString());
         refreshCustomerAndLoanDetails();
+        refreshAvailableLoanCategories();
         availableUsers.removeIf(user -> user != event.getSource().getAdmin());
         availableUsers.addAll(UserManager.getInstance().getUsers());
         adminViewComponentController.loadedSuccessfully(event);

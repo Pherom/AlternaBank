@@ -1,7 +1,5 @@
 package com.alternabank.graphical.ui.application.user;
 
-import com.alternabank.engine.customer.CustomerManager;
-import com.alternabank.engine.loan.Loan;
 import com.alternabank.engine.loan.dto.LoanDetails;
 import com.alternabank.engine.transaction.Transaction;
 import com.alternabank.engine.transaction.event.BilateralTransactionEvent;
@@ -19,8 +17,12 @@ import javafx.beans.property.SimpleListProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 
 import java.net.URL;
 import java.util.*;
@@ -28,6 +30,8 @@ import java.util.stream.Collectors;
 
 public class UserViewController implements Initializable {
 
+    @FXML private TabPane userViewComponent;
+    @FXML private Tab investmentTab;
     @FXML private AppController appComponentController;
     @FXML private UserViewInformationController userViewInformationComponentController;
     @FXML private UserViewInvestmentController userViewInvestmentComponentController;
@@ -53,14 +57,13 @@ public class UserViewController implements Initializable {
         return accountBalance;
     }
 
+    public double getAccountBalance() {
+        return accountBalance.get();
+    }
+
     public void setAppController(AppController controller) {
         this.appComponentController = controller;
-        controller.selectedUserProperty().addListener(new ChangeListener<User>() {
-            @Override
-            public void changed(ObservableValue<? extends User> observable, User oldValue, User newValue) {
-                onUserSelection(newValue);
-            }
-        });
+        controller.selectedUserProperty().addListener((observable, oldValue, newValue) -> onUserSelection(newValue));
     }
 
     public AppController getAppController() {
@@ -70,6 +73,17 @@ public class UserViewController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         userViewInformationComponentController.setUserViewController(this);
+        userViewInvestmentComponentController.setUserViewController(this);
+        userViewComponent.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (oldValue == investmentTab) {
+                Optional<ButtonType> result = userViewInvestmentComponentController.showQuitConfirmationDialog();
+                result.ifPresent(buttonType -> {
+                    if(buttonType == ButtonType.NO)
+                        userViewComponent.getSelectionModel().select(investmentTab);
+                    else userViewInvestmentComponentController.prepareForNewInvestmentRequest();
+                });
+            }
+        });
     }
 
     private void refreshAccountBalance(User selectedUser) {
@@ -84,6 +98,7 @@ public class UserViewController implements Initializable {
             Collections.reverse(transactionRecordList);
             accountLedger.set(FXCollections.observableList(transactionRecordList));
             refreshAccountBalance(selectedUser);
+            userViewInvestmentComponentController.prepareForNewInvestmentRequest();
         }
     }
 

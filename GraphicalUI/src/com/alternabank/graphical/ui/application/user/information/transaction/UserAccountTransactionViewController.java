@@ -4,6 +4,7 @@ import com.alternabank.engine.transaction.Transaction;
 import com.alternabank.engine.transaction.UnilateralTransaction;
 import com.alternabank.engine.user.UserManager;
 import com.alternabank.graphical.ui.application.user.information.UserViewInformationController;
+import com.alternabank.graphical.ui.application.user.util.DoubleTextFormatter;
 import javafx.application.Platform;
 import javafx.beans.binding.StringBinding;
 import javafx.event.ActionEvent;
@@ -51,39 +52,11 @@ public class UserAccountTransactionViewController implements Initializable {
 
     private Optional<Double> showUnilateralTransactionDialog(UnilateralTransaction.Type type) {
         Optional<Double> total = Optional.empty();
-        Pattern validEditingState = Pattern.compile("(([1-9][0-9]*)|0)?(\\.[0-9]*)?");
-
-        UnaryOperator<TextFormatter.Change> filter = c -> {
-            String text = c.getControlNewText();
-            if (validEditingState.matcher(text).matches()) {
-                return c ;
-            } else {
-                return null ;
-            }
-        };
-
-        StringConverter<Double> converter = new StringConverter<Double>() {
-
-            @Override
-            public Double fromString(String s) {
-                if (s.isEmpty() || "-".equals(s) || ".".equals(s) || "-.".equals(s)) {
-                    return 0.0 ;
-                } else {
-                    return Double.valueOf(s);
-                }
-            }
-
-
-            @Override
-            public String toString(Double d) {
-                return d.toString();
-            }
-        };
         TextInputDialog depositAmountInputDialog = new TextInputDialog();
         depositAmountInputDialog.setHeaderText(type.toString());
         depositAmountInputDialog.setContentText("Enter total funds:");
         TextField editor = depositAmountInputDialog.getEditor();
-        editor.setTextFormatter(new TextFormatter<Double>(converter, 0.0, filter));
+        editor.setTextFormatter(new DoubleTextFormatter(0.0));
         if(depositAmountInputDialog.showAndWait().isPresent()) {
             total = Optional.of(Double.parseDouble(editor.getText()));
         }
