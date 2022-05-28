@@ -6,6 +6,7 @@ import com.alternabank.engine.transaction.event.BilateralTransactionEvent;
 import com.alternabank.engine.transaction.event.UnilateralTransactionEvent;
 import com.alternabank.engine.user.User;
 import com.alternabank.engine.user.UserManager;
+import com.alternabank.engine.xml.event.XMLLoadSuccessEvent;
 import com.alternabank.graphical.ui.application.AppController;
 import com.alternabank.graphical.ui.application.user.information.UserViewInformationController;
 import com.alternabank.graphical.ui.application.user.investment.UserViewInvestmentController;
@@ -115,5 +116,9 @@ public class UserViewController implements Initializable {
             accountLedger.add(0, event.getRecord());
             refreshAccountBalance(appComponentController.getSelectedUser());
         }
+    }
+
+    public void loadedSuccessfully(XMLLoadSuccessEvent event) {
+        userViewInvestmentComponentController.loadedSuccessfully(event);
     }
 }

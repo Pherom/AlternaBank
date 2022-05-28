@@ -1,11 +1,8 @@
 package com.alternabank.engine.xml;
 
-import com.alternabank.engine.customer.CustomerManager;
 import com.alternabank.engine.customer.state.CustomerManagerState;
-import com.alternabank.engine.loan.LoanManager;
-import com.alternabank.engine.loan.state.LoanManagerState;
+import com.alternabank.engine.loan.request.state.LoanManagerState;
 import com.alternabank.engine.loan.request.LoanRequest;
-import com.alternabank.engine.time.TimeManager;
 import com.alternabank.engine.transaction.UnilateralTransaction;
 import com.alternabank.engine.user.Admin;
 import com.alternabank.engine.xml.event.*;

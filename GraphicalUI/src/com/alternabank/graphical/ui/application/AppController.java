@@ -35,6 +35,7 @@ import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -59,6 +60,10 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
         return loanDetails;
     }
 
+    public List<LoanDetails> getLoanDetails() {
+        return loanDetails.get();
+    }
+
     public ListProperty<CustomerDetails> customerDetailsProperty() {
         return customerDetails;
     }
@@ -81,6 +86,10 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
 
     public ListProperty<String> availableLoanCategoriesProperty() {
         return availableLoanCategories;
+    }
+
+    public List<String> getAvailableLoanCategories() {
+        return availableLoanCategories.get();
     }
 
     private void onUserSelection(User selectedUser) {
@@ -182,6 +191,7 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
         availableUsers.addAll(UserManager.getInstance().getUsers());
         adminViewComponentController.loadedSuccessfully(event);
         headerComponentController.loadedSuccessfully(event);
+        userViewComponentController.loadedSuccessfully(event);
         showLoadSuccessAlert(loadedFilePath.getFileName());
     }
 

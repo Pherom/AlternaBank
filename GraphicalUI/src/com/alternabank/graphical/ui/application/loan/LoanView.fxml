@@ -6,20 +6,31 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 
-<SplitPane dividerPositions="0.85" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="240.0" prefWidth="895.0" stylesheets="@LoanView.css" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.loan.LoanViewController">
+<SplitPane fx:id="loanViewComponent" dividerPositions="0.7" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="240.0" prefWidth="1030.0" stylesheets="@LoanView.css" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.loan.LoanViewController">
   <items>
       <TableView id="loan" fx:id="loanTableView" minWidth="0.0">
          <columns>
-            <TableColumn id="loanIDColumn" fx:id="loanIDTableColumn" editable="false" prefWidth="130.0" text="ID" />
-            <TableColumn id="loanBorrowerColumn" fx:id="loanBorrowerTableColumn" editable="false" prefWidth="75.0" text="Borrower" />
-            <TableColumn id="loanCategoryColumn" fx:id="loanCategoryTableColumn" editable="false" prefWidth="110.0" text="Category" />
-            <TableColumn id="loanCapitalColumn" fx:id="loanCapitalTableColumn" editable="false" prefWidth="75.0" text="Capital" />
-            <TableColumn id="loanInterestColumn" fx:id="loanInterestTableColumn" editable="false" prefWidth="65.0" text="Interest" />
-            <TableColumn id="loanTotalColumn" fx:id="loanTotalTableColumn" editable="false" prefWidth="75.0" text="Total" />
-            <TableColumn id="loanStatusColumn" fx:id="loanStatusTableColumn" editable="false" prefWidth="65.0" text="Status" />
+            <TableColumn id="loanStatusColumn" fx:id="loanStatusTableColumn" editable="false" minWidth="0.0" prefWidth="65.0" text="Status" />
+            <TableColumn id="loanIDColumn" fx:id="loanIDTableColumn" editable="false" prefWidth="85.0" text="ID" />
+            <TableColumn id="loanBorrowerColumn" fx:id="loanBorrowerTableColumn" editable="false" prefWidth="65.0" text="Borrower" />
+            <TableColumn id="loanCategoryColumn" fx:id="loanCategoryTableColumn" editable="false" prefWidth="85.0" text="Category" />
+            <TableColumn id="loanPrincipalColumn" fx:id="loanPrincipalTableColumn" editable="false" prefWidth="65.0" text="Principal">
+               <columns>
+                  <TableColumn id="loanCapitalColumn" fx:id="loanCapitalTableColumn" prefWidth="75.0" text="Capital" />
+                  <TableColumn id="principalPerInstallmentColumn" fx:id="principalPerInstallmentTableColumn" text="Principal /&#10;Installment" />
+               </columns></TableColumn>
+            <TableColumn id="loanInterestColumn" fx:id="loanInterestTableColumn" editable="false" minWidth="0.0" prefWidth="65.0" text="Interest">
+               <columns>
+                  <TableColumn id="interestRateColumn" fx:id="interestRateTableColumn" prefWidth="60.0" text="Rate" />
+                  <TableColumn id="interestTotalColumn" fx:id="interestTotalTableColumn" prefWidth="60.0" text="Total" />
+                  <TableColumn id="interestPerInstallmentColumn" fx:id="interestPerInstallmentTableColumn" text="Interest /&#10;Installment" />
+               </columns></TableColumn>
+            <TableColumn id="installmentPeriodColumn" fx:id="installmentPeriodTableColumn" prefWidth="75.0" text="Installment&#10;Period" />
+            <TableColumn id="loanTermColumn" fx:id="loanTermTableColumn" prefWidth="60.0" text="Term" />
+            <TableColumn id="loanTotalColumn" fx:id="loanTotalTableColumn" editable="false" prefWidth="60.0" text="Total" />
          </columns>
       </TableView>
-      <TabPane minWidth="300.0" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
+      <TabPane minHeight="0.0" minWidth="0.0" prefHeight="300.0" prefWidth="300.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
           <Tab text="Investments">
             <content>

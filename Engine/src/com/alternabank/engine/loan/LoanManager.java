@@ -5,8 +5,7 @@ import com.alternabank.engine.customer.CustomerManager;
 import com.alternabank.engine.loan.dto.LoanDetails;
 import com.alternabank.engine.loan.event.LoanStatusUpdateEvent;
 import com.alternabank.engine.loan.event.listener.LoanStatusUpdateListener;
-import com.alternabank.engine.loan.state.LoanManagerState;
-import com.alternabank.engine.time.TimeManager;
+import com.alternabank.engine.loan.request.state.LoanManagerState;
 import com.alternabank.engine.time.event.TimeAdvancementEvent;
 import com.alternabank.engine.time.event.listener.TimeAdvancementListener;
 import com.alternabank.engine.transaction.BilateralTransaction;
@@ -172,6 +171,17 @@ public class LoanManager implements TimeAdvancementListener {
 
     public Set<String> getLoanCategories() {
         return availableCategories;
+    }
+
+    public int getPostedLoanCountOfCustomerWithMostPostedLoans() {
+        return admin.getCustomerManager().getCustomersByName().values().stream()
+                .mapToInt(customer -> (int) customer.getPostedLoansIDs().stream()
+                        .filter(loanID -> {
+                            Loan loan = loansByID.get(loanID);
+                                return loan.getStatus() == Loan.Status.ACTIVE ||
+                                        loan.getStatus() == Loan.Status.PENDING ||
+                                        loan.getStatus() == Loan.Status.RISK;
+                        }).count()).max().getAsInt();
     }
 
     public class BasicLoan extends AbstractDepositAccount.Deposit implements Loan {

@@ -1,10 +1,7 @@
-package com.alternabank.engine.loan.state;
+package com.alternabank.engine.loan.request.state;
 
 import com.alternabank.engine.loan.Loan;
-import com.alternabank.engine.transaction.event.listener.BilateralTransactionListener;
-import com.alternabank.engine.transaction.event.listener.UnilateralTransactionListener;
 
-import javax.swing.event.EventListenerList;
 import java.util.*;
 
 public class LoanManagerState {

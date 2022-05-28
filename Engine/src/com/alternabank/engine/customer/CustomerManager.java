@@ -97,6 +97,10 @@ public class CustomerManager {
         return customersByName.values().stream().map(CustomerManager.Customer::toCustomerDetails).collect(Collectors.toSet());
     }
 
+    public CustomerDetails getCustomerDetailsByName(String name) {
+        return  customersByName.get(name).toCustomerDetails();
+    }
+
     public void depositFunds(String customerName, double total) {
         if(customerExists(customerName)) {
             CustomerManager.Customer customer = customersByName.get(customerName);

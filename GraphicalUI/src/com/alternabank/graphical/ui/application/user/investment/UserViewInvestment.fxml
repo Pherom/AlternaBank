@@ -14,7 +14,7 @@
 
 <GridPane id="userViewInvestment" fx:id="userViewInvestmentComponent" hgap="5.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="610.0" prefWidth="1300.0" vgap="5.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.user.investment.UserViewInvestmentController">
   <columnConstraints>
-    <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="300.0" />
+    <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="200.0" />
       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
   </columnConstraints>
   <rowConstraints>
@@ -24,14 +24,14 @@
       <VBox spacing="5.0">
          <children>
             <Label text="Loan Categories:" />
-            <CheckListView id="loanCategoryCheckList" fx:id="loanCategoryCheckListView" maxHeight="1.7976931348623157E308" VBox.vgrow="ALWAYS" />
+            <CheckListView fx:id="loanCategoryCheckListView" />
             <Label text="Investment Total:" />
             <TextField id="loanInvestmentTotal" fx:id="loanInvestmentTotalTextField" />
             <Label text="Minimum Loan Interest:" />
             <TextField id="loanMinimumInterest" fx:id="loanMinimumInterestTextField" />
             <Label text="Minimum Loan Term:" />
             <Spinner id="loanMinTerm" fx:id="loanMinTermSpinner" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
-            <Label text="Maximum Borrower Loans" />
+            <Label text="Maximum Borrower Loans:" />
             <Spinner id="borrowerMaxLoans" fx:id="borrowerMaxLoansSpinner" maxWidth="1.7976931348623157E308" />
             <Label text="Maximum Loan Ownership Rate:" />
             <Spinner id="loanMaxOwnershipRate" fx:id="loanMaxOwnershipRateSpinner" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
@@ -57,13 +57,15 @@
              <fx:include fx:id="matchingLoanViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" source="../../loan/LoanView.fxml" GridPane.rowIndex="1" />
             <HBox alignment="CENTER" maxWidth="1.7976931348623157E308" spacing="5.0" GridPane.rowIndex="2">
                <children>
-                  <Button id="addLoan" fx:id="addLoanButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0" text="+" />
-                  <Button id="removeLoan" fx:id="removeLoanButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="25.0" text="-" />
+                  <Button id="addLoan" fx:id="addAllLoansButton" mnemonicParsing="false" onAction="#onAddAllLoansRequest" prefHeight="25.0" prefWidth="25.0" text="˅" />
+                  <Button id="addLoan" fx:id="addLoanSelectionButton" mnemonicParsing="false" onAction="#onLoanSelectionAddRequest" prefHeight="25.0" prefWidth="25.0" text="+" />
+                  <Button id="removeLoan" fx:id="removeLoanSelectionButton" mnemonicParsing="false" onAction="#onLoanSelectionRemoveRequest" prefHeight="25.0" prefWidth="25.0" text="-" />
+                  <Button id="removeAllLoans" fx:id="removeAllLoansButton" mnemonicParsing="false" onAction="#onRemoveAllLoansRequest" prefHeight="25.0" prefWidth="25.0" text="˄" />
                </children>
             </HBox>
              <Label text="Selected Loans:" GridPane.rowIndex="3" />
              <fx:include fx:id="selectedLoanViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" source="../../loan/LoanView.fxml" GridPane.rowIndex="4" />
-            <Button id="invest" fx:id="investButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Invest" GridPane.rowIndex="5" />
+            <Button id="invest" fx:id="investButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onInvestmentRequest" text="Invest" GridPane.rowIndex="5" />
          </children>
          <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
