@@ -37,11 +37,11 @@ public class CustomerDetails {
     }
 
     public Set<LoanDetails> getPostedLoanDetails() {
-        return Collections.unmodifiableSet(postedLoanDetails);
+        return postedLoanDetails;
     }
 
     public Set<LoanDetails> getInvestedLoanDetails() {
-        return Collections.unmodifiableSet(investedLoanDetails);
+        return investedLoanDetails;
     }
 
     public Set<LoanDetails> getPostedLoanDetailsByStatus(Loan.Status status) {

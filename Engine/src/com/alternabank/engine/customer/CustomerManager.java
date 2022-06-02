@@ -42,7 +42,7 @@ public class CustomerManager {
     }
 
     public Map<String, Customer> getCustomersByName() {
-        return Collections.unmodifiableMap(customersByName);
+        return customersByName;
     }
 
     public Set<CustomerBalanceDetails> getCustomerBalanceDetails() {
@@ -90,7 +90,7 @@ public class CustomerManager {
     }
 
     public Set<String> getCustomerNames() {
-        return Collections.unmodifiableSet(customersByName.keySet());
+        return customersByName.keySet();
     }
 
     public Set<CustomerDetails> getCustomerDetails() {
@@ -148,7 +148,7 @@ public class CustomerManager {
 
         @Override
         public Set<String> getPostedLoansIDs() {
-            return Collections.unmodifiableSet(postedLoansIDs);
+            return postedLoansIDs;
         }
 
         @Override
@@ -167,7 +167,7 @@ public class CustomerManager {
 
         @Override
         public Set<String> getInvestedLoansIDs() {
-            return Collections.unmodifiableSet(investedLoansIDs);
+            return investedLoansIDs;
         }
 
         public CustomerDetails toCustomerDetails() {

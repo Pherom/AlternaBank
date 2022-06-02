@@ -1,11 +1,10 @@
 package com.alternabank.engine.loan.dto;
 
+import com.alternabank.engine.account.dto.AccountDetails;
 import com.alternabank.engine.loan.Loan;
+import com.alternabank.engine.loan.notification.PaymentNotification;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class LoanDetails {
 
@@ -17,12 +16,13 @@ public class LoanDetails {
     private final Loan.Status status;
     private final Map<Loan.Status, Integer> statusTimes;
     private final Map<String, Double> investmentByLenderName;
+    private final AccountDetails accountDetails;
     private final int originalTerm;
     private final int remainingTerm;
     private final int installmentPeriod;
     private final int delayedInstallmentCount;
     private final int previousInstallmentTime;
-    private final int nextInstallmentTime;
+    private final Optional<Integer> nextInstallmentTime;
     private final double totalInvestment;
     private final double interestPerInstallment;
     private final double capital;
@@ -30,6 +30,9 @@ public class LoanDetails {
     private final double remainingInterest;
     private final double remainingPrincipal;
     private final double paidPrincipal;
+    private final double accumulatedDebtPrincipal;
+    private final double accumulatedDebtInterest;
+    private final List<PaymentNotification> paymentNotifications;
 
     public LoanDetails(Loan loan) {
         loanAsShortString = loan.toShortString();
@@ -53,6 +56,10 @@ public class LoanDetails {
         remainingInterest = loan.getRemainingInterest();
         remainingPrincipal = loan.getRemainingPrincipal();
         paidPrincipal = loan.getPaidPrincipal();
+        accountDetails = loan.getAccount().toAccountDetails();
+        paymentNotifications = loan.getPaymentNotifications();
+        accumulatedDebtPrincipal = loan.getAccumulatedDebtPrincipal();
+        accumulatedDebtInterest = loan.getAccumulatedDebtInterest();
     }
 
     public String getBorrowerName() {
@@ -116,11 +123,11 @@ public class LoanDetails {
     }
 
     public Map<Loan.Status, Integer> getStatusTimes() {
-        return Collections.unmodifiableMap(statusTimes);
+        return statusTimes;
     }
 
     public Map<String, Double> getInvestmentByLenderName() {
-        return Collections.unmodifiableMap(investmentByLenderName);
+        return investmentByLenderName;
     }
 
     public int getRemainingTerm() {
@@ -140,7 +147,7 @@ public class LoanDetails {
     }
 
     public double getPaidPrincipal() {
-        return remainingPrincipal;
+        return paidPrincipal;
     }
 
     public double getPaidInterest() {
@@ -163,6 +170,18 @@ public class LoanDetails {
         return remainingInterest + remainingPrincipal;
     }
 
+    public double getAccumulatedDebtPrincipal() {
+        return accumulatedDebtPrincipal;
+    }
+
+    public double getAccumulatedDebtInterest() {
+        return accumulatedDebtInterest;
+    }
+
+    public double getAccumulatedDebtTotal() {
+        return accumulatedDebtPrincipal + accumulatedDebtInterest;
+    }
+
     public double getTotalInvestment() {
         return totalInvestment;
     }
@@ -173,30 +192,6 @@ public class LoanDetails {
 
     public int getDelayedInstallmentCount() {
         return delayedInstallmentCount;
-    }
-
-    double getDelayedInstallmentPrincipal() {
-        return delayedInstallmentCount * getPrincipalPerInstallment();
-    }
-
-    double getDelayedInstallmentInterest() {
-        return delayedInstallmentCount * getInterestPerInstallment();
-    }
-
-    public double getDelayedInstallmentTotal() {
-        return delayedInstallmentCount * getTotalPerInstallment();
-    }
-
-    public double getNextInstallmentPrincipal() {
-        return getDelayedInstallmentPrincipal() + (getRemainingInstallmentCount() >= 0 ? getPrincipalPerInstallment() : 0);
-    }
-
-    public double getNextInstallmentInterest() {
-        return getDelayedInstallmentInterest() + (getRemainingInstallmentCount() >= 0 ? getInterestPerInstallment() : 0);
-    }
-
-    public double getNextInstallmentTotal() {
-        return getNextInstallmentPrincipal() + getNextInstallmentInterest();
     }
 
     public int getTimeSincePreviousInstallment() {
@@ -211,12 +206,20 @@ public class LoanDetails {
         return previousInstallmentTime;
     }
 
-    public int getNextInstallmentTime() {
+    public Optional<Integer> getNextInstallmentTime() {
         return nextInstallmentTime;
     }
 
     public String toShortString() {
         return loanAsShortString;
+    }
+
+    public AccountDetails getAccountDetails() {
+        return accountDetails;
+    }
+
+    public List<PaymentNotification> getPaymentNotifications() {
+        return paymentNotifications;
     }
 
     @Override
@@ -229,11 +232,11 @@ public class LoanDetails {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LoanDetails that = (LoanDetails) o;
-        return originalTerm == that.originalTerm && remainingTerm == that.remainingTerm && installmentPeriod == that.installmentPeriod && delayedInstallmentCount == that.delayedInstallmentCount && previousInstallmentTime == that.previousInstallmentTime && nextInstallmentTime == that.nextInstallmentTime && Double.compare(that.totalInvestment, totalInvestment) == 0 && Double.compare(that.interestPerInstallment, interestPerInstallment) == 0 && Double.compare(that.capital, capital) == 0 && Double.compare(that.paidInterest, paidInterest) == 0 && Double.compare(that.remainingInterest, remainingInterest) == 0 && Double.compare(that.remainingPrincipal, remainingPrincipal) == 0 && Double.compare(that.paidPrincipal, paidPrincipal) == 0 && Objects.equals(loanAsShortString, that.loanAsShortString) && Objects.equals(loanAsString, that.loanAsString) && Objects.equals(id, that.id) && Objects.equals(borrowerName, that.borrowerName) && Objects.equals(category, that.category) && status == that.status && Objects.equals(statusTimes, that.statusTimes) && Objects.equals(investmentByLenderName, that.investmentByLenderName);
+        return originalTerm == that.originalTerm && remainingTerm == that.remainingTerm && installmentPeriod == that.installmentPeriod && delayedInstallmentCount == that.delayedInstallmentCount && previousInstallmentTime == that.previousInstallmentTime && Double.compare(that.totalInvestment, totalInvestment) == 0 && Double.compare(that.interestPerInstallment, interestPerInstallment) == 0 && Double.compare(that.capital, capital) == 0 && Double.compare(that.paidInterest, paidInterest) == 0 && Double.compare(that.remainingInterest, remainingInterest) == 0 && Double.compare(that.remainingPrincipal, remainingPrincipal) == 0 && Double.compare(that.paidPrincipal, paidPrincipal) == 0 && Double.compare(that.accumulatedDebtPrincipal, accumulatedDebtPrincipal) == 0 && Double.compare(that.accumulatedDebtInterest, accumulatedDebtInterest) == 0 && Objects.equals(loanAsShortString, that.loanAsShortString) && Objects.equals(loanAsString, that.loanAsString) && Objects.equals(id, that.id) && Objects.equals(borrowerName, that.borrowerName) && Objects.equals(category, that.category) && status == that.status && Objects.equals(statusTimes, that.statusTimes) && Objects.equals(investmentByLenderName, that.investmentByLenderName) && Objects.equals(accountDetails, that.accountDetails) && Objects.equals(nextInstallmentTime, that.nextInstallmentTime) && Objects.equals(paymentNotifications, that.paymentNotifications);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(loanAsShortString, loanAsString, id, borrowerName, category, status, statusTimes, investmentByLenderName, originalTerm, remainingTerm, installmentPeriod, delayedInstallmentCount, previousInstallmentTime, nextInstallmentTime, totalInvestment, interestPerInstallment, capital, paidInterest, remainingInterest, remainingPrincipal, paidPrincipal);
+        return Objects.hash(loanAsShortString, loanAsString, id, borrowerName, category, status, statusTimes, investmentByLenderName, accountDetails, originalTerm, remainingTerm, installmentPeriod, delayedInstallmentCount, previousInstallmentTime, nextInstallmentTime, totalInvestment, interestPerInstallment, capital, paidInterest, remainingInterest, remainingPrincipal, paidPrincipal, accumulatedDebtPrincipal, accumulatedDebtInterest, paymentNotifications);
     }
 }

@@ -2,13 +2,12 @@ package com.alternabank.graphical.ui.application.user.investment;
 
 import com.alternabank.engine.loan.Loan;
 import com.alternabank.engine.loan.dto.LoanDetails;
-import com.alternabank.engine.loan.request.InvestmentRequestBuilder;
-import com.alternabank.engine.user.User;
 import com.alternabank.engine.user.UserManager;
 import com.alternabank.engine.xml.event.XMLLoadSuccessEvent;
 import com.alternabank.graphical.ui.application.loan.LoanViewController;
 import com.alternabank.graphical.ui.application.user.UserViewController;
-import com.alternabank.graphical.ui.application.user.util.DoubleTextFormatter;
+import com.alternabank.graphical.ui.application.util.DoubleTextFormatter;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
@@ -17,20 +16,24 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import org.controlsfx.control.CheckListView;
 import org.controlsfx.validation.ValidationSupport;
 import org.controlsfx.validation.Validator;
 
 import java.net.URL;
-import java.util.Optional;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 public class UserViewInvestmentController implements Initializable {
 
-    private ListProperty<LoanDetails> selectedLoanDetails = new SimpleListProperty<>(FXCollections.observableArrayList());
-    private ListProperty<LoanDetails> matchingLoanDetails = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private final ListProperty<LoanDetails> selectedLoanDetails = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private final ListProperty<LoanDetails> matchingLoanDetails = new SimpleListProperty<>(FXCollections.observableArrayList());
     private UserViewController userViewComponentController;
+
     @FXML private CheckListView<String> loanCategoryCheckListView;
 
     @FXML private TextField loanInvestmentTotalTextField;
@@ -47,9 +50,21 @@ public class UserViewInvestmentController implements Initializable {
 
     @FXML private Spinner<Integer> loanMaxOwnershipRateSpinner;
 
+    @FXML private ProgressBar investmentTaskProgressBar;
+
+    @FXML private Label investmentProgressLabel;
+
+    @FXML private Label investmentProgressDescriptionLabel;
+
+    @FXML private Button investButton;
+
+    @FXML private HBox loanSelectionControlsArea;
+
+    @FXML private VBox filtersAndInvestmentInfoArea;
+
     private int borrowerMaxLoansSpinnerMaxValue;
 
-    private ValidationSupport validationSupport = new ValidationSupport();
+    private final ValidationSupport validationSupport = new ValidationSupport();
 
     public void setUserViewController(UserViewController controller) {
         this.userViewComponentController = controller;
@@ -68,16 +83,10 @@ public class UserViewInvestmentController implements Initializable {
         borrowerMaxLoansSpinner.getValueFactory().setValue(borrowerMaxLoansSpinnerMaxValue);
         loanMaxOwnershipRateSpinner.getValueFactory().setValue(100);
         selectedLoanDetails.clear();
+        investmentProgressDescriptionLabel.setText("");
+        investmentProgressLabel.setText("#");
+        investmentTaskProgressBar.setProgress(0);
         updateMatchingLoansAccordingToFilter();
-    }
-
-    public Optional<ButtonType> showQuitConfirmationDialog() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
-        alert.setContentText("Are you sure you want to cancel this investment request?");
-        alert.setHeaderText("Cancel investment request?");
-        alert.setTitle("Investment Request Cancellation");
-        return alert.showAndWait();
     }
 
     @Override
@@ -91,19 +100,20 @@ public class UserViewInvestmentController implements Initializable {
         loanMinimumInterestTextField.textProperty().addListener((observable, oldValue, newValue) -> onFilterUpdateRequest());
         validationSupport.registerValidator(loanInvestmentTotalTextField, true, Validator.createEmptyValidator("Total investment is required"));
         validationSupport.registerValidator(loanMinimumInterestTextField, false, Validator.createPredicateValidator((String text) -> text.isEmpty() || Double.parseDouble(text) > 0, "Minimum interest rate must be higher than 0"));
-        matchingLoanViewComponentController.loanDetailsProperty().bindBidirectional(matchingLoanDetails);
-        selectedLoanViewComponentController.loanDetailsProperty().bindBidirectional(selectedLoanDetails);
+        matchingLoanViewComponentController.loanDetailsProperty().bind(matchingLoanDetails);
+        selectedLoanViewComponentController.loanDetailsProperty().bind(selectedLoanDetails);
     }
 
     private void updateMatchingLoansAccordingToFilter() {
         matchingLoanDetails.setAll(UserManager.getInstance().getAdmin().getLoanManager().getLoanDetails().stream().filter(loanDetails ->
-                !selectedLoanDetails.contains(loanDetails) &&
+                selectedLoanDetails.stream().noneMatch(selectedLoanDetails -> loanDetails.getId().equals(selectedLoanDetails.getId())) &&
                         !loanDetails.getBorrowerName().equals(userViewComponentController.getAppController().getSelectedUser().getName()) &&
                         loanDetails.getStatus() == Loan.Status.PENDING &&
                         loanCategoryCheckListView.getCheckModel().getCheckedItems().contains(loanDetails.getCategory()) &&
                         (loanMinimumInterestTextField.getText().isEmpty() || loanDetails.getTotalInterest() >= Double.parseDouble(loanMinimumInterestTextField.getText())) &&
                         loanDetails.getOriginalTerm() >= loanMinTermSpinner.getValue() &&
-                        UserManager.getInstance().getAdmin().getCustomerManager().getCustomerDetailsByName(loanDetails.getBorrowerName()).getPostedLoanDetails().size() <= borrowerMaxLoansSpinner.getValue()).collect(Collectors.toList()));
+                        UserManager.getInstance().getAdmin().getCustomerManager().getCustomerDetailsByName(loanDetails.getBorrowerName()).getPostedLoanDetails().size() <= borrowerMaxLoansSpinner.getValue())
+                .sorted(Comparator.comparing(LoanDetails::getId, String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
     }
 
     private void onFilterUpdateRequest() {
@@ -180,13 +190,44 @@ public class UserViewInvestmentController implements Initializable {
                 showNoSelectedLoansAlert();
             }
 
-            //DOESN'T WORK
             else {
                 String currentUserName = UserManager.getInstance().getCurrentUser().getName();
-                InvestmentRequestBuilder investmentRequestBuilder = new InvestmentRequestBuilder(currentUserName, loanInvestmentTotal);
-                UserManager.getInstance().getAdmin().getCustomerManager().getCustomersByName().get(currentUserName)
-                        .postInvestmentRequest(investmentRequestBuilder.build())
+                double minimumInterest = loanMinimumInterestTextField.getText().isEmpty() ? 0 : Double.parseDouble(loanMinimumInterestTextField.getText());
+                UserManager.getInstance().getAdmin().getLoanManager().postInvestmentRequest(
+                        investmentTask -> {
+                            investmentTaskProgressBar.progressProperty().bind(investmentTask.progressProperty());
+                            investmentProgressLabel.textProperty().bind(Bindings.format("%.0f%% :", Bindings.multiply(investmentTask.progressProperty(), 100)));
+                            investmentProgressDescriptionLabel.textProperty().bind(investmentTask.messageProperty());
+                            filtersAndInvestmentInfoArea.setDisable(true);
+                            loanSelectionControlsArea.setDisable(true);
+                            investButton.setDisable(true);
+                            investmentTask.valueProperty().addListener((observable, oldValue, newValue) -> {
+                                investmentTaskFinished();
+                            });
+                        },
+                        currentUserName, loanInvestmentTotal, minimumInterest, loanMaxOwnershipRateSpinner.getValue(), loanMinTermSpinner.getValue(),
+                        borrowerMaxLoansSpinner.getValue(), new HashSet<>(loanCategoryCheckListView.getCheckModel().getCheckedItems()),
+                        selectedLoanDetails.stream().map(LoanDetails::getId).collect(Collectors.toSet()));
 ;            }
         }
+    }
+
+    private void showInvestmentTaskFinishedMessage() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Investment complete");
+        alert.setHeaderText("Investment completed successfully!");
+        alert.setContentText("The total funds that were requested to invest were divided between all of the selected loans according to the algorithm");
+        alert.showAndWait();
+    }
+
+    private void investmentTaskFinished() {
+        showInvestmentTaskFinishedMessage();
+        investmentTaskProgressBar.progressProperty().unbind();
+        investmentProgressLabel.textProperty().unbind();
+        investmentProgressDescriptionLabel.textProperty().unbind();
+        selectedLoanDetails.clear();
+        filtersAndInvestmentInfoArea.setDisable(false);
+        loanSelectionControlsArea.setDisable(false);
+        investButton.setDisable(false);
     }
 }

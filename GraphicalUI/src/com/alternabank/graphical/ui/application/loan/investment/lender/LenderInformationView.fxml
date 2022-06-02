@@ -8,7 +8,7 @@
 <VBox id="lenderInformationView" fx:id="lenderInformationViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="150.0" prefWidth="290.0" spacing="5.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.loan.investment.lender.LenderInformationViewController">
    <children>
       <Label text="Lender Information:" />
-      <TableView id="lenderInformationTable" fx:id="lenderInformationTableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+      <TableView id="lenderInformationTable" fx:id="lenderInformationTableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="100.0" minWidth="100.0" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
          <columns>
             <TableColumn id="lenderNameColumn" fx:id="lenderNameTableColumn" prefWidth="75.0" text="Name" />
             <TableColumn id="lenderInvestmentColumn" fx:id="lenderInvestmentTableColumn" prefWidth="75.0" text="Investment" />

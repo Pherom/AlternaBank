@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ListView?>
+
+
+<ListView id="paymentNotificationView" fx:id="paymentNotificationViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="550.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.user.payment.notification.PaymentNotificationViewController" />

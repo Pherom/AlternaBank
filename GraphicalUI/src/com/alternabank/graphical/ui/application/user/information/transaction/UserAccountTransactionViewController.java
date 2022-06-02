@@ -1,26 +1,20 @@
 package com.alternabank.graphical.ui.application.user.information.transaction;
 
-import com.alternabank.engine.transaction.Transaction;
 import com.alternabank.engine.transaction.UnilateralTransaction;
 import com.alternabank.engine.user.UserManager;
+import com.alternabank.graphical.ui.application.account.AccountLedgerListViewController;
 import com.alternabank.graphical.ui.application.user.information.UserViewInformationController;
-import com.alternabank.graphical.ui.application.user.util.DoubleTextFormatter;
+import com.alternabank.graphical.ui.application.util.DoubleTextFormatter;
 import javafx.application.Platform;
-import javafx.beans.binding.StringBinding;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.util.StringConverter;
-import javafx.util.converter.DoubleStringConverter;
 
-import java.net.URL;
 import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.function.UnaryOperator;
-import java.util.regex.Pattern;
 
-public class UserAccountTransactionViewController implements Initializable {
+public class UserAccountTransactionViewController {
 
     @FXML private Label accountBalanceLabel;
 
@@ -28,14 +22,14 @@ public class UserAccountTransactionViewController implements Initializable {
 
     @FXML private Button withdrawalButton;
 
-    @FXML private ListView<Transaction.Record> accountLedgerListView;
+    @FXML private AccountLedgerListViewController accountLedgerListViewComponentController;
 
     private UserViewInformationController userViewInformationComponentController;
 
     public void setUserViewInformationController(UserViewInformationController controller) {
         this.userViewInformationComponentController = controller;
         Platform.runLater(() -> {
-            accountLedgerListView.itemsProperty().bind(userViewInformationComponentController.getUserViewController().accountLedgerProperty());
+            accountLedgerListViewComponentController.transactionRecordsProperty().bind(userViewInformationComponentController.getUserViewController().accountLedgerProperty());
             accountBalanceLabel.textProperty().bindBidirectional(userViewInformationComponentController.getUserViewController().accountBalanceProperty(), new StringConverter<Number>() {
                 @Override
                 public String toString(Number balance) {
@@ -72,32 +66,5 @@ public class UserAccountTransactionViewController implements Initializable {
     @FXML
     public void onWithdrawalRequest(ActionEvent event) {
         showUnilateralTransactionDialog(UnilateralTransaction.Type.WITHDRAWAL).ifPresent(total -> UserManager.getInstance().getAdmin().getCustomerManager().withdrawFunds(UserManager.getInstance().getCurrentUser().getName(), total));
-    }
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        accountLedgerListView.setCellFactory(tc -> new ListCell<Transaction.Record>() {
-            @Override
-            protected void updateItem(Transaction.Record record, boolean empty) {
-                super.updateItem(record, empty);
-                this.getStyleClass().add("record-cell");
-                this.getStyleClass().remove("successful");
-                this.getStyleClass().remove("failed");
-                if(!empty) {
-                    setText(record.toString());
-                    switch (record.getStatus()) {
-                        case SUCCESSFUL:
-                            this.getStyleClass().add("successful");
-                            break;
-                        case FAILED:
-                            this.getStyleClass().add("failed");
-                            break;
-                    }
-                }
-                else {
-                    setText(null);
-                }
-            }
-        });
     }
 }

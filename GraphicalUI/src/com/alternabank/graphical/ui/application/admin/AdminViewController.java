@@ -2,6 +2,7 @@ package com.alternabank.graphical.ui.application.admin;
 
 import com.alternabank.engine.customer.CustomerManager;
 import com.alternabank.engine.customer.dto.CustomerDetails;
+import com.alternabank.engine.loan.event.PaymentDueEvent;
 import com.alternabank.engine.transaction.event.BilateralTransactionEvent;
 import com.alternabank.engine.transaction.event.UnilateralTransactionEvent;
 import com.alternabank.engine.user.UserManager;
@@ -17,6 +18,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.layout.BorderPane;
+import org.controlsfx.control.Notifications;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -51,5 +53,20 @@ public class AdminViewController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         adminViewHeaderComponentController.setAdminViewController(this);
+    }
+
+    public void bilateralTransactionExecuted(BilateralTransactionEvent event) {
+        if (appComponentController.getSelectedUser() == UserManager.getInstance().getAdmin())
+            Notifications.create().text(event.getRecord().toString()).showInformation();
+    }
+
+    public void unilateralTransactionExecuted(UnilateralTransactionEvent event) {
+        if (appComponentController.getSelectedUser() == UserManager.getInstance().getAdmin())
+            Notifications.create().text(event.getRecord().toString()).showInformation();
+    }
+
+    public void paymentDue(PaymentDueEvent event) {
+        if (appComponentController.getSelectedUser() == UserManager.getInstance().getAdmin())
+            Notifications.create().text(event.getNotification().toString()).showInformation();
     }
 }

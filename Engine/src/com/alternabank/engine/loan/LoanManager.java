@@ -4,8 +4,12 @@ import com.alternabank.engine.account.AbstractDepositAccount;
 import com.alternabank.engine.customer.CustomerManager;
 import com.alternabank.engine.loan.dto.LoanDetails;
 import com.alternabank.engine.loan.event.LoanStatusUpdateEvent;
+import com.alternabank.engine.loan.event.PaymentDueEvent;
 import com.alternabank.engine.loan.event.listener.LoanStatusUpdateListener;
-import com.alternabank.engine.loan.request.state.LoanManagerState;
+import com.alternabank.engine.loan.event.listener.PaymentDueListener;
+import com.alternabank.engine.loan.notification.PaymentNotification;
+import com.alternabank.engine.loan.state.LoanManagerState;
+import com.alternabank.engine.loan.task.InvestmentTask;
 import com.alternabank.engine.time.event.TimeAdvancementEvent;
 import com.alternabank.engine.time.event.listener.TimeAdvancementListener;
 import com.alternabank.engine.transaction.BilateralTransaction;
@@ -13,10 +17,13 @@ import com.alternabank.engine.transaction.Transaction;
 import com.alternabank.engine.transaction.event.listener.BilateralTransactionListener;
 import com.alternabank.engine.transaction.event.listener.UnilateralTransactionListener;
 import com.alternabank.engine.user.Admin;
+import com.alternabank.engine.user.UserManager;
 
 import javax.swing.event.EventListenerList;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class LoanManager implements TimeAdvancementListener {
 
@@ -46,7 +53,7 @@ public class LoanManager implements TimeAdvancementListener {
     }
 
     public Map<String, Loan> getLoansByID() {
-        return Collections.unmodifiableMap(loansByID);
+        return loansByID;
     }
 
     public boolean loanExists(String id) {
@@ -57,11 +64,11 @@ public class LoanManager implements TimeAdvancementListener {
         return loansByID.keySet().containsAll(request.getChosenLoanIDs()) &&
                 request.getTotal() >= Investment.MINIMUM_TOTAL &&
                 request.getTotal() <= admin.getCustomerManager().getCustomersByName().get(request.getLenderName()).getAccount().getBalance() &&
-                (request.getMinimumInterestRate() == Investment.DEFAULT_VALUE || request.getMinimumInterestRate() > Investment.INTEREST_RATE_LOWER_BOUND) &&
-                (request.getMinimumInterestPerTimeUnit() == Investment.DEFAULT_VALUE || request.getMinimumInterestPerTimeUnit() > Investment.INTEREST_PER_TIME_UNIT_LOWER_BOUND) &&
-                (request.getMinimumLoanTerm() == Investment.DEFAULT_VALUE || request.getMinimumLoanTerm() > 0) &&
-                (request.getMaximumLoanOwnershipPercentage() == Investment.DEFAULT_VALUE || (request.getMaximumLoanOwnershipPercentage() < Investment.MAXIMUM_LOAN_OWNERSHIP_PERCENTAGE_UPPER_BOUND && request.getMaximumLoanOwnershipPercentage() > Investment.MAXIMUM_LOAN_OWNERSHIP_PERCENTAGE_LOWER_BOUND)) &&
-                (request.getMaximumBorrowerActiveLoans() == Investment.DEFAULT_VALUE || request.getMaximumBorrowerActiveLoans() >= Investment.MINIMUM_MAXIMUM_BORROWER_ACTIVE_LOANS);
+                (request.getMinimumInterestRate() >= Investment.MINIMUM_INTEREST_RATE) &&
+                (request.getMinimumInterest() >= Investment.MINIMUM_INTEREST) &&
+                (request.getMinimumLoanTerm() >= 0) &&
+                (request.getMaximumLoanOwnershipPercentage() <= Investment.MAXIMUM_LOAN_OWNERSHIP_PERCENTAGE_MAX && request.getMaximumLoanOwnershipPercentage() >= Investment.MAXIMUM_LOAN_OWNERSHIP_PERCENTAGE_MIN) &&
+                (request.getMaximumBorrowerActiveLoans() >= Investment.MAXIMUM_BORROWER_ACTIVE_LOANS_MIN);
     }
 
     public boolean validateLoanRequest(Loan.Request request) {
@@ -77,7 +84,7 @@ public class LoanManager implements TimeAdvancementListener {
     }
 
     public Set<String> getAvailableCategories() {
-        return Collections.unmodifiableSet(availableCategories);
+        return availableCategories;
     }
 
     public void addCategory(String category) {
@@ -124,6 +131,10 @@ public class LoanManager implements TimeAdvancementListener {
         eventListeners.add(LoanStatusUpdateListener.class, listener);
     }
 
+    public void addPaymentDueListener(PaymentDueListener listener) {
+        eventListeners.add(PaymentDueListener.class, listener);
+    }
+
     public boolean removeCategory(String category) {
         boolean success = false;
 
@@ -135,34 +146,53 @@ public class LoanManager implements TimeAdvancementListener {
         return success;
     }
 
+    public void postInvestmentRequest(Consumer<InvestmentTask> uiBinder, String lenderName, double investmentTotal, double minimumInterest, int maximumLoanOwnershipPercentage, int minimumLoanTerm, int maximumBorrowerActiveLoans, Set<String> categoriesOfInterest, Collection<String> loansToInvestIn) {
+        InvestmentTask task = new InvestmentTask(lenderName, investmentTotal, minimumInterest, maximumLoanOwnershipPercentage, minimumLoanTerm, maximumBorrowerActiveLoans, categoriesOfInterest, loansToInvestIn);
+        uiBinder.accept(task);
+        new Thread(task).start();
+    }
+
     public Investment createInvestment(Investment.Request investmentRequest) {
         Investment investment = null;
 
         if(validateInvestmentRequest(investmentRequest)) {
             investment = new BasicInvestment(investmentRequest);
-            double maxInvestmentPerLoan = investmentRequest.getTotal() / investmentRequest.getChosenLoanCount();
-            investmentRequest.getChosenLoanIDs().stream().map(loanID -> admin.getLoanManager().getLoan(loanID))
-                    .forEach(loan -> loan.investIn(admin.getCustomerManager().getCustomersByName().get(investmentRequest.getLenderName()),
-                            Math.min(loan.getRemainingInvestment(), maxInvestmentPerLoan)));
-        }
+            Map<String, Double> maxInvestmentByChosenLoanID = investmentRequest.getChosenLoanIDs().stream().map(loanID -> admin.getLoanManager().getLoan(loanID))
+                            .collect(Collectors.toMap(loan -> loan.getAccount().getID(), loan -> loan.getOriginalRequest().getCapital() * (investmentRequest.getMaximumLoanOwnershipPercentage() / 100.0)));
 
+            List<Map.Entry<String, Double>> maxInvestmentByChosenLoanIdSortedEntrySet = maxInvestmentByChosenLoanID.entrySet().stream().sorted(Map.Entry.comparingByValue()).collect(Collectors.toList());
+
+            double remainingInvestmentTotal = investmentRequest.getTotal();
+
+            for (int i = 0; i < investmentRequest.getChosenLoanCount(); i++) {
+                Loan loan = admin.getLoanManager().getLoan(maxInvestmentByChosenLoanIdSortedEntrySet.get(i).getKey());
+                double loanMaxInvestment = maxInvestmentByChosenLoanIdSortedEntrySet.get(i).getValue();
+                double averagedInvestment = remainingInvestmentTotal / (investmentRequest.getChosenLoanCount() - i);
+                double finalLoanInvestment = Math.min(averagedInvestment, loanMaxInvestment);
+                loan.investIn(admin.getCustomerManager().getCustomersByName().get(investmentRequest.getLenderName()
+                ), finalLoanInvestment);
+                remainingInvestmentTotal -= finalLoanInvestment;
+            }
+        }
         return investment;
     }
 
     @Override
     public void timeAdvanced(TimeAdvancementEvent event) {
-        loansByID.values().stream().filter(loan -> loan.getStatus() == Loan.Status.ACTIVE || loan.getStatus() == Loan.Status.RISK)
-                .filter(loan -> loan.getPreviousInstallmentTime() == admin.getTimeManager().getCurrentTime())
-                .sorted((loan1, loan2) -> {
-                    if(loan1.getStatusTimes().get(Loan.Status.ACTIVE) > loan2.getStatusTimes().get(Loan.Status.ACTIVE))
-                        return 1;
-                    else if(loan1.getStatusTimes().get(Loan.Status.ACTIVE) < loan2.getStatusTimes().get(Loan.Status.ACTIVE))
-                        return -1;
-                    else {
-                        return Double.compare(loan1.getNextInstallmentTotal(), loan2.getNextInstallmentTotal());
-                    }
-                })
-                .forEach(Loan::executeNextInstallment);
+        loansByID.values().stream().filter(loan -> loan.getStatus() == Loan.Status.ACTIVE || loan.getStatus() == Loan.Status.RISK).forEach(loan -> {
+            int currentTime = admin.getTimeManager().getCurrentTime();
+            if (loan.getPreviousInstallmentTime() == currentTime) {
+                PaymentNotification paymentNotification = new PaymentNotification(loan.getAccount().getID(), loan.getPreviousInstallmentTime(), loan.getAccumulatedDebtPrincipal(), loan.getAccumulatedDebtInterest());
+                loan.addPaymentNotification(paymentNotification);
+                Arrays.stream(eventListeners.getListeners(PaymentDueListener.class)).forEach(listener -> listener.paymentDue(new PaymentDueEvent(paymentNotification, loan.toLoanDetails())));
+            }
+            else if (currentTime == loan.getPreviousInstallmentTime() + 1 && loan.getPaidTotal() < loan.getRequiredTotal())
+            {
+                if (loan.getStatus() == Loan.Status.ACTIVE)
+                    loan.setStatus(Loan.Status.RISK);
+                loan.incrementDelayedInstallmentCount();
+            }
+        });
     }
 
     public Set<LoanDetails> getLoanDetails() {
@@ -193,11 +223,22 @@ public class LoanManager implements TimeAdvancementListener {
         private int delayedInstallmentCount = 0;
         private double paidInterest = 0;
         private double paidPrincipal = 0;
+        private final List<PaymentNotification> paymentNotifications = new LinkedList<>();
 
         private BasicLoan(Loan.Request request) {
             new LoanAccount(request.getID()).super(request.getID());
             this.originalRequest = request;
             statusTimes.put(Status.PENDING, admin.getTimeManager().getCurrentTime());
+        }
+
+        @Override
+        public void addPaymentNotification(PaymentNotification paymentNotification) {
+            paymentNotifications.add(paymentNotification);
+        }
+
+        @Override
+        public List<PaymentNotification> getPaymentNotifications() {
+            return Collections.unmodifiableList(paymentNotifications);
         }
 
         @Override
@@ -212,12 +253,12 @@ public class LoanManager implements TimeAdvancementListener {
 
         @Override
         public Map<String, Double> getInvestmentByLenderName() {
-            return Collections.unmodifiableMap(investmentByLenderName);
+            return investmentByLenderName;
         }
 
         @Override
         public Map<Status, Integer> getStatusTimes() {
-            return Collections.unmodifiableMap(statusTimes);
+            return statusTimes;
         }
 
         @Override
@@ -242,7 +283,7 @@ public class LoanManager implements TimeAdvancementListener {
 
         @Override
         public double getPaidPrincipal() {
-            return getRemainingPrincipal();
+            return paidPrincipal;
         }
 
         @Override
@@ -253,6 +294,36 @@ public class LoanManager implements TimeAdvancementListener {
         @Override
         public double getPaidTotal() {
             return paidInterest + paidPrincipal;
+        }
+
+        @Override
+        public double getRequiredPrincipal() {
+            return originalRequest.getPrincipalPerInstallment() * getPassedInstallmentCount();
+        }
+
+        @Override
+        public double getRequiredInterest() {
+            return originalRequest.getInterestPerInstallment() * getPassedInstallmentCount();
+        }
+
+        @Override
+        public double getRequiredTotal() {
+            return getRequiredPrincipal() + getRequiredInterest();
+        }
+
+        @Override
+        public double getAccumulatedDebtPrincipal() {
+            return getRequiredPrincipal() - paidPrincipal;
+        }
+
+        @Override
+        public double getAccumulatedDebtInterest() {
+            return getRequiredInterest() - paidInterest;
+        }
+
+        @Override
+        public double getAccumulatedDebtTotal() {
+            return getRequiredTotal() - getPaidTotal();
         }
 
         @Override
@@ -281,38 +352,8 @@ public class LoanManager implements TimeAdvancementListener {
         }
 
         @Override
-        public double getDelayedInstallmentPrincipal() {
-            return delayedInstallmentCount * originalRequest.getPrincipalPerInstallment();
-        }
-
-        @Override
-        public double getDelayedInstallmentInterest() {
-            return delayedInstallmentCount * originalRequest.getInterestPerInstallment();
-        }
-
-        @Override
         public int getDelayedInstallmentCount() {
             return delayedInstallmentCount;
-        }
-
-        @Override
-        public double getDelayedInstallmentTotal() {
-            return getDelayedInstallmentPrincipal() + getDelayedInstallmentInterest();
-        }
-
-        @Override
-        public double getNextInstallmentPrincipal() {
-            return getDelayedInstallmentPrincipal() + (getRemainingInstallmentCount() >= 0 ? originalRequest.getPrincipalPerInstallment() : 0);
-        }
-
-        @Override
-        public double getNextInstallmentInterest() {
-            return getDelayedInstallmentInterest() + (getRemainingInstallmentCount() >= 0 ? originalRequest.getInterestPerInstallment() : 0);
-        }
-
-        @Override
-        public double getNextInstallmentTotal() {
-            return getNextInstallmentPrincipal() + getNextInstallmentInterest();
         }
 
         @Override
@@ -326,8 +367,11 @@ public class LoanManager implements TimeAdvancementListener {
         }
 
         @Override
-        public int getTimeBeforeNextInstallment() {
-            return originalRequest.getInstallmentPeriod() - getTimeSincePreviousInstallment();
+        public Optional<Integer> getTimeBeforeNextInstallment() {
+            Optional<Integer> timeBeforeNextInstallment = Optional.empty();
+            if(status != Status.FINISHED)
+                timeBeforeNextInstallment = Optional.of(originalRequest.getInstallmentPeriod() - getTimeSincePreviousInstallment());
+            return timeBeforeNextInstallment;
         }
 
         @Override
@@ -336,8 +380,8 @@ public class LoanManager implements TimeAdvancementListener {
         }
 
         @Override
-        public int getNextInstallmentTime() {
-            return admin.getTimeManager().getCurrentTime() + getTimeBeforeNextInstallment();
+        public Optional<Integer> getNextInstallmentTime() {
+            return getTimeBeforeNextInstallment().isPresent() ? Optional.of(admin.getTimeManager().getCurrentTime() + getTimeBeforeNextInstallment().get()) : Optional.empty();
         }
 
         private String getInvestmentByLenderNameAsString() {
@@ -358,8 +402,10 @@ public class LoanManager implements TimeAdvancementListener {
         }
 
         private String getNextInstallmentDataAsString() {
-            return String.format("\t\tNext Installment On: %s %d (Total: %.2f)",
-                    admin.getTimeManager().getTimeUnitName(), getNextInstallmentTime(), getNextInstallmentTotal());
+            Optional<Integer> nextInstallmentTime = getNextInstallmentTime();
+            String nextInstallmentTimeAsString = nextInstallmentTime.isPresent() ? String.format("%s %d", admin.getTimeManager().getTimeUnitName(), nextInstallmentTime.get()) : "N/A";
+            return String.format("\t\tNext Installment On: %s (Total: %.2f)",
+                    nextInstallmentTimeAsString, getAccumulatedDebtTotal());
         }
 
         private String getLedgerAsString() {
@@ -375,7 +421,7 @@ public class LoanManager implements TimeAdvancementListener {
         }
 
         private String getDelayedInstallmentsAsString() {
-            return String.format("\t\tDelayed Installments: %d (Total: %.2f)", getDelayedInstallmentCount(), getDelayedInstallmentTotal());
+            return String.format("\t\tDelayed Installments: %d (Total: %.2f)", getDelayedInstallmentCount(), getAccumulatedDebtTotal());
         }
 
         private String getStartAndEndTimesAsString() {
@@ -458,50 +504,93 @@ public class LoanManager implements TimeAdvancementListener {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
+            BasicLoan basicLoan = (BasicLoan) o;
+            return Objects.equals(originalRequest, basicLoan.originalRequest);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), originalRequest);
+        }
+
+        @Override
         public void investIn(CustomerManager.Customer customer, double total) {
             if (status == Status.PENDING) {
                 total = total > getRemainingInvestment() ? getRemainingInvestment() : total;
                 investmentByLenderName.put(customer.getName(), investmentByLenderName.getOrDefault(customer.getName(), 0.0) + total);
                 customer.getAccount().executeTransaction(BilateralTransaction.Type.TRANSFER, getAccount(), total, 0);
                 if (getTotalInvestment() >= originalRequest.getCapital()) {
-                    Loan.Status oldStatus = status;
-                    status = Status.ACTIVE;
-                    statusTimes.put(Status.ACTIVE, admin.getTimeManager().getCurrentTime());
-                    Arrays.stream(eventListeners.getListeners(LoanStatusUpdateListener.class)).forEach(listener -> listener.statusUpdated(new LoanStatusUpdateEvent(oldStatus, this.toLoanDetails())));
+                    setStatus(Status.ACTIVE);
                     getAccount().executeTransaction(BilateralTransaction.Type.TRANSFER, admin.getCustomerManager().getCustomersByName().get(originalRequest.getBorrowerName()).getAccount(), originalRequest.getCapital(), 0);
                 }
             }
         }
 
         @Override
-        public void executeNextInstallment() {
+        public void executeAccumulatedDebtPayment() {
             Transaction.Record.Bilateral record = admin.getCustomerManager().getCustomersByName().get(originalRequest.getBorrowerName())
-                    .getAccount().executeTransaction(BilateralTransaction.Type.TRANSFER, getAccount(), getNextInstallmentPrincipal(), getNextInstallmentInterest());
-            if(record.getStatus() == Transaction.Status.FAILED && getRemainingInstallmentCount() >= 0) {
-                delayedInstallmentCount++;
-                if(status != Status.RISK) {
-                    Loan.Status oldStatus = status;
-                    status = Status.RISK;
-                    statusTimes.put(Status.RISK, admin.getTimeManager().getCurrentTime());
-                    Arrays.stream(eventListeners.getListeners(LoanStatusUpdateListener.class)).forEach(listener -> listener.statusUpdated(new LoanStatusUpdateEvent(oldStatus, this.toLoanDetails())));
-                }
-            }
-            else if(record.getStatus() == Transaction.Status.SUCCESSFUL){
-                paidPrincipal += getNextInstallmentPrincipal();
-                paidInterest += getNextInstallmentInterest();
-                if(status == Status.RISK) {
-                    status = Status.ACTIVE;
-                    delayedInstallmentCount = 0;
-                }
-                if(getPaidTotal() == originalRequest.getTotal()) {
-                    Loan.Status oldStatus = status;
-                    status = Status.FINISHED;
-                    statusTimes.put(Status.FINISHED, admin.getTimeManager().getCurrentTime());
-                    Arrays.stream(eventListeners.getListeners(LoanStatusUpdateListener.class)).forEach(listener -> listener.statusUpdated(new LoanStatusUpdateEvent(oldStatus, this.toLoanDetails())));
+                    .getAccount().executeTransaction(BilateralTransaction.Type.TRANSFER, getAccount(), getAccumulatedDebtPrincipal(), getAccumulatedDebtInterest());
+            if (record.getStatus() == Transaction.Status.SUCCESSFUL) {
+                paidPrincipal += getAccumulatedDebtPrincipal();
+                paidInterest += getAccumulatedDebtInterest();
+                if (getRemainingTotal() == 0) {
+                    setStatus(Status.FINISHED);
                     investmentByLenderName.keySet().forEach(name -> getAccount().executeTransaction(BilateralTransaction.Type.TRANSFER,
                             admin.getCustomerManager().getCustomersByName().get(name).getAccount(), investmentByLenderName.get(name), getInvestmentInterest(investmentByLenderName.get(name))));
                 }
+                else setStatus(Status.ACTIVE);
             }
+        }
+
+        @Override
+        public void executeRemainingTotalPayment() {
+            Transaction.Record.Bilateral record = admin.getCustomerManager().getCustomersByName().get(originalRequest.getBorrowerName())
+                    .getAccount().executeTransaction(BilateralTransaction.Type.TRANSFER, getAccount(), getRemainingPrincipal(), getRemainingInterest());
+            if (record.getStatus() == Transaction.Status.SUCCESSFUL) {
+                paidPrincipal += getRemainingPrincipal();
+                paidInterest += getRemainingInterest();
+                setStatus(Status.FINISHED);
+                investmentByLenderName.keySet().forEach(name -> getAccount().executeTransaction(BilateralTransaction.Type.TRANSFER,
+                        admin.getCustomerManager().getCustomersByName().get(name).getAccount(), investmentByLenderName.get(name), getInvestmentInterest(investmentByLenderName.get(name))));
+            }
+        }
+
+        @Override
+        public void executeRiskPayment(double paymentTotal) {
+            double paymentInterest = paymentTotal * originalRequest.getInterestRate();
+            double paymentPrincipal = paymentTotal - paymentInterest;
+            Transaction.Record.Bilateral record = admin.getCustomerManager().getCustomersByName().get(originalRequest.getBorrowerName())
+                    .getAccount().executeTransaction(BilateralTransaction.Type.TRANSFER, getAccount(), paymentPrincipal, paymentInterest);
+            if (record.getStatus() == Transaction.Status.SUCCESSFUL) {
+                paidPrincipal += paymentPrincipal;
+                paidInterest += paymentInterest;
+                if (getRemainingTotal() == 0) {
+                    setStatus(Status.FINISHED);
+                    investmentByLenderName.keySet().forEach(name -> getAccount().executeTransaction(BilateralTransaction.Type.TRANSFER,
+                            admin.getCustomerManager().getCustomersByName().get(name).getAccount(), investmentByLenderName.get(name), getInvestmentInterest(investmentByLenderName.get(name))));
+                }
+                else if (getAccumulatedDebtTotal() == 0) {
+                    setStatus(Status.ACTIVE);
+                }
+            }
+        }
+
+        @Override
+        public void setStatus(Status status) {
+            Loan.Status previousStatus = this.status;
+            this.status = status;
+            if (!(status == Status.ACTIVE && statusTimes.containsKey(Status.ACTIVE)))
+                statusTimes.put(status, UserManager.getInstance().getAdmin().getTimeManager().getCurrentTime());
+            Arrays.stream(eventListeners.getListeners(LoanStatusUpdateListener.class)).forEach(listener -> listener.statusUpdated(new LoanStatusUpdateEvent(previousStatus, toLoanDetails())));
+        }
+
+        @Override
+        public void incrementDelayedInstallmentCount() {
+            delayedInstallmentCount++;
         }
     }
 

@@ -124,11 +124,11 @@ public class LoanRequest implements Loan.Request {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LoanRequest that = (LoanRequest) o;
-        return Double.compare(that.capital, capital) == 0 && installmentPeriod == that.installmentPeriod && Double.compare(that.interestPerInstallment, interestPerInstallment) == 0 && term == that.term && Objects.equals(category, that.category) && Objects.equals(id, that.id) && Objects.equals(borrowerName, that.borrowerName);
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(category, capital, installmentPeriod, interestPerInstallment, term, id, borrowerName);
+        return Objects.hash(id);
     }
 }

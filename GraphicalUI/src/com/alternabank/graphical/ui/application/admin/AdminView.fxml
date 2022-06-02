@@ -9,11 +9,11 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane id="adminView" fx:id="adminViewComponent" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="100.0" prefHeight="570.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.admin.AdminViewController">
+<BorderPane id="adminView" fx:id="adminViewComponent" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="100.0" minWidth="100.0" prefHeight="570.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.admin.AdminViewController">
    <top>
-      <VBox maxHeight="-Infinity" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
+      <VBox maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" BorderPane.alignment="CENTER">
          <children>
-              <fx:include fx:id="adminViewHeaderComponent" source="header/AdminViewHeader.fxml" />
+              <fx:include fx:id="adminViewHeaderComponent" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" source="header/AdminViewHeader.fxml" />
             <Separator prefWidth="200.0" />
          </children>
       </VBox>
@@ -24,9 +24,9 @@
           <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="100.0" />
         </columnConstraints>
         <rowConstraints>
-          <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" vgrow="NEVER" />
+          <RowConstraints maxHeight="1.7976931348623157E308" vgrow="NEVER" />
           <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" vgrow="SOMETIMES" />
-            <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" vgrow="NEVER" />
+            <RowConstraints maxHeight="1.7976931348623157E308" vgrow="NEVER" />
             <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>

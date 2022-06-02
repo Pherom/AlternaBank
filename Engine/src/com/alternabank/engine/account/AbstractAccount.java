@@ -120,7 +120,7 @@ public abstract class AbstractAccount implements Account, Transaction.Initiator,
 
         @Override
         public Set<Transaction.Record> getRecords() {
-            return Collections.unmodifiableSet(records);
+            return records;
         }
 
         private void log(Transaction.Record record) {

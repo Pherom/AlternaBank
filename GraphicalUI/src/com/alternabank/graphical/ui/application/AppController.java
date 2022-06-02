@@ -3,7 +3,9 @@ package com.alternabank.graphical.ui.application;
 import com.alternabank.engine.customer.dto.CustomerDetails;
 import com.alternabank.engine.loan.dto.LoanDetails;
 import com.alternabank.engine.loan.event.LoanStatusUpdateEvent;
+import com.alternabank.engine.loan.event.PaymentDueEvent;
 import com.alternabank.engine.loan.event.listener.LoanStatusUpdateListener;
+import com.alternabank.engine.loan.event.listener.PaymentDueListener;
 import com.alternabank.engine.time.event.TimeAdvancementEvent;
 import com.alternabank.engine.time.event.listener.TimeAdvancementListener;
 import com.alternabank.engine.transaction.event.BilateralTransactionEvent;
@@ -35,11 +37,12 @@ import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-public class AppController implements Initializable, XMLLoadSuccessListener, XMLCustomerLoadFailureListener, XMLCategoryLoadFailureListener, XMLFileLoadFailureListener, XMLLoanLoadFailureListener, TimeAdvancementListener, LoanStatusUpdateListener, UnilateralTransactionListener, BilateralTransactionListener {
+public class AppController implements Initializable, XMLLoadSuccessListener, XMLCustomerLoadFailureListener, XMLCategoryLoadFailureListener, XMLFileLoadFailureListener, XMLLoanLoadFailureListener, TimeAdvancementListener, LoanStatusUpdateListener, UnilateralTransactionListener, BilateralTransactionListener, PaymentDueListener {
 
     @FXML private BorderPane appComponent;
     @FXML private HeaderController headerComponentController;
@@ -49,11 +52,10 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
     @FXML private UserViewController userViewComponentController;
     private final StringProperty loadedFilePathStringProperty = new SimpleStringProperty();
     private final StringProperty currentTimeStringProperty = new SimpleStringProperty();
-    private final ListProperty<CustomerDetails> customerDetails = new SimpleListProperty<CustomerDetails>();
-    private final ListProperty<LoanDetails> loanDetails = new SimpleListProperty<LoanDetails>();
+    private final ListProperty<CustomerDetails> customerDetails = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private final ListProperty<LoanDetails> loanDetails = new SimpleListProperty<>(FXCollections.observableArrayList());
     private final ObjectProperty<User> selectedUser = new SimpleObjectProperty<>();
     private final ListProperty<User> availableUsers = new SimpleListProperty<>(FXCollections.observableArrayList());
-
     private final ListProperty<String> availableLoanCategories = new SimpleListProperty<>(FXCollections.observableArrayList());
 
     public ListProperty<LoanDetails> loanDetailsProperty() {
@@ -92,15 +94,16 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
         return availableLoanCategories.get();
     }
 
-    private void onUserSelection(User selectedUser) {
-        UserManager.getInstance().setCurrentUser(selectedUser);
-        if(selectedUser == UserManager.getInstance().getAdmin()) {
-            refreshCustomerAndLoanDetails();
+    private void onUserSelection() {
+        UserManager.getInstance().setCurrentUser(selectedUser.get());
+        refreshCustomerAndLoanDetails();
+        if(selectedUser.get() == UserManager.getInstance().getAdmin()) {
             userViewComponent.setVisible(false);
             adminViewComponent.setVisible(true);
         }
         else
         {
+            userViewComponentController.onUserSelection();
             adminViewComponent.setVisible(false);
             userViewComponent.setVisible(true);
         }
@@ -113,6 +116,7 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
 
     public void onAdvanceTimeRequest(ActionEvent event) {
         UserManager.getInstance().getAdmin().advanceTime();
+        refreshCustomerAndLoanDetails();
     }
 
     public void onLoadFileRequest(ActionEvent event) {
@@ -146,12 +150,17 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
         UserManager.getInstance().getAdmin().getTransactionManager().addBilateralTransactionListener(this);
     }
 
+    private void registerAsPaymentDueListener() {
+        UserManager.getInstance().getAdmin().getLoanManager().addPaymentDueListener(this);
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         registerAsXMLLoadListener();
         registerAsTimeAdvancementListener();
         registerAsLoanStatusUpdateListener();
         registerAsTransactionListener();
+        registerAsPaymentDueListener();
         updateCurrentTimeStringProperty(UserManager.getInstance().getAdmin().getTimeManager().getCurrentTime());
         headerComponentController.setAppController(this);
         adminViewComponentController.setAppController(this);
@@ -161,7 +170,7 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
 
         availableUsers.add(UserManager.getInstance().getAdmin());
         selectedUser.set(UserManager.getInstance().getAdmin());
-        selectedUser.addListener((observable, oldValue, newValue) -> onUserSelection(newValue));
+        selectedUser.addListener((observable, oldValue, newValue) -> onUserSelection());
     }
 
     private void showLoadSuccessAlert(Path fileName) {
@@ -173,12 +182,12 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
     }
 
     public void refreshCustomerAndLoanDetails() {
-        customerDetails.set(FXCollections.observableList(new ArrayList<>(UserManager.getInstance().getAdmin().getCustomerManager().getCustomerDetails())));
-        loanDetails.set(FXCollections.observableList(new ArrayList<>(UserManager.getInstance().getAdmin().getLoanManager().getLoanDetails())));
+        customerDetails.setAll(UserManager.getInstance().getAdmin().getCustomerManager().getCustomerDetails().stream().sorted(Comparator.comparing(CustomerDetails::getName, String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+        loanDetails.setAll(UserManager.getInstance().getAdmin().getLoanManager().getLoanDetails().stream().sorted(Comparator.comparing(LoanDetails::getId, String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
     }
 
     public void refreshAvailableLoanCategories() {
-        availableLoanCategories.set(FXCollections.observableList(new ArrayList<>(UserManager.getInstance().getAdmin().getLoanManager().getAvailableCategories())));
+        availableLoanCategories.setAll(UserManager.getInstance().getAdmin().getLoanManager().getAvailableCategories().stream().sorted(Comparator.comparing(category -> category, String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
     }
 
     @Override
@@ -239,11 +248,21 @@ public class AppController implements Initializable, XMLLoadSuccessListener, XML
 
     @Override
     public void unilateralTransactionExecuted(UnilateralTransactionEvent event) {
+        refreshCustomerAndLoanDetails();
         userViewComponentController.unilateralTransactionExecuted(event);
+        adminViewComponentController.unilateralTransactionExecuted(event);
     }
 
     @Override
     public void bilateralTransactionExecuted(BilateralTransactionEvent event) {
+        refreshCustomerAndLoanDetails();
         userViewComponentController.bilateralTransactionExecuted(event);
+        adminViewComponentController.bilateralTransactionExecuted(event);
+    }
+
+    @Override
+    public void paymentDue(PaymentDueEvent event) {
+        userViewComponentController.paymentDue(event);
+        adminViewComponentController.paymentDue(event);
     }
 }

@@ -1,4 +1,4 @@
-package com.alternabank.engine.loan.request.state;
+package com.alternabank.engine.loan.state;
 
 import com.alternabank.engine.loan.Loan;
 

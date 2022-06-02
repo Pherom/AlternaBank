@@ -32,7 +32,7 @@ public abstract class XMLLoadFailureEvent<U> {
     }
 
     public List<Cause<U>> getCauses() {
-        return Collections.unmodifiableList(causes);
+        return causes;
     }
 
     public String getErrorMessage() {

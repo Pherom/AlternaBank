@@ -8,18 +8,18 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.alternabank.engine.loan.Investment.DEFAULT_VALUE;
+import static com.alternabank.engine.loan.Investment.*;
 
 public class InvestmentRequestBuilder {
 
     private String lenderName;
     private double total;
     private Set<String> categoriesOfInterest = UserManager.getInstance().getAdmin().getLoanManager().getAvailableCategories();
-    private double minimumInterestPerTimeUnit = DEFAULT_VALUE;
-    private double minimumInterestRate = DEFAULT_VALUE;
-    private int minimumLoanTerm = DEFAULT_VALUE;
-    private int maximumLoanOwnershipPercentage = DEFAULT_VALUE;
-    private int maximumBorrowerActiveLoans = DEFAULT_VALUE;
+    private double minimumInterest = MINIMUM_INTEREST;
+    private double minimumInterestRate = MINIMUM_INTEREST_RATE;
+    private int minimumLoanTerm = MINIMUM_LOAN_TERM_MIN;
+    private int maximumLoanOwnershipPercentage = MAXIMUM_LOAN_OWNERSHIP_PERCENTAGE_MAX;
+    private int maximumBorrowerActiveLoans = UserManager.getInstance().getAdmin().getLoanManager().getPostedLoanCountOfCustomerWithMostPostedLoans();
     private final Set<String> chosenLoanIDs = new HashSet<>();
 
     public InvestmentRequestBuilder(String lenderName, double total) {
@@ -39,13 +39,11 @@ public class InvestmentRequestBuilder {
         this.categoriesOfInterest = categoriesOfInterest;
     }
 
-    public void setMinimumInterestPerTimeUnit(double minimumInterestPerTimeUnit) {
-        this.minimumInterestPerTimeUnit = DEFAULT_VALUE;
-        this.minimumInterestPerTimeUnit = minimumInterestPerTimeUnit;
+    public void setMinimumInterest(double minimumInterest) {
+        this.minimumInterest = minimumInterest;
     }
 
     public void setMinimumInterestRate(double minimumInterestRate) {
-        this.minimumInterestPerTimeUnit = DEFAULT_VALUE;
         this.minimumInterestRate = minimumInterestRate;
     }
 
@@ -78,15 +76,15 @@ public class InvestmentRequestBuilder {
     }
 
     public Set<String> getCategoriesOfInterest() {
-        return Collections.unmodifiableSet(categoriesOfInterest);
+        return categoriesOfInterest;
     }
 
     public double getMinimumInterestRate() {
         return minimumInterestRate;
     }
 
-    public double getMinimumInterestPerTimeUnit() {
-        return minimumInterestPerTimeUnit;
+    public double getMinimumInterest() {
+        return minimumInterest;
     }
 
     public int getMinimumLoanTerm() {
@@ -102,11 +100,11 @@ public class InvestmentRequestBuilder {
     }
 
     public Set<String> getChosenLoanIDs() {
-        return Collections.unmodifiableSet(chosenLoanIDs);
+        return chosenLoanIDs;
     }
 
     public InvestmentRequest build() {
-            return new InvestmentRequest(lenderName, total, categoriesOfInterest, minimumInterestPerTimeUnit, minimumInterestRate, minimumLoanTerm, maximumLoanOwnershipPercentage, maximumBorrowerActiveLoans, chosenLoanIDs);
+            return new InvestmentRequest(lenderName, total, categoriesOfInterest, minimumInterest, minimumInterestRate, minimumLoanTerm, maximumLoanOwnershipPercentage, maximumBorrowerActiveLoans, chosenLoanIDs);
 
     }
 }

@@ -5,20 +5,20 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane id="app" fx:id="appComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="710.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.AppController">
+<BorderPane id="app" fx:id="appComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="710.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.AppController">
    <top>
-      <VBox BorderPane.alignment="CENTER">
+      <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" BorderPane.alignment="CENTER">
          <children>
-              <fx:include fx:id="headerComponent" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" source="header/Header.fxml" BorderPane.alignment="TOP_CENTER" />
-            <Separator prefWidth="200.0" />
+              <fx:include fx:id="headerComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" source="header/Header.fxml" BorderPane.alignment="TOP_CENTER" />
+            <Separator maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefWidth="200.0" />
          </children>
       </VBox>
    </top>
    <center>
-      <StackPane prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+      <StackPane minHeight="0.0" minWidth="0.0" prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <children>
-              <fx:include fx:id="adminViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" source="admin/AdminView.fxml" BorderPane.alignment="TOP_CENTER" />
-              <fx:include fx:id="userViewComponent" source="user/UserView.fxml" />
+              <fx:include fx:id="adminViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" source="admin/AdminView.fxml" BorderPane.alignment="TOP_CENTER" />
+              <fx:include fx:id="userViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" source="user/UserView.fxml" />
          </children>
       </StackPane>
    </center>

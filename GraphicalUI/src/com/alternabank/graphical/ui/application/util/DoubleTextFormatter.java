@@ -1,4 +1,4 @@
-package com.alternabank.graphical.ui.application.user.util;
+package com.alternabank.graphical.ui.application.util;
 
 import javafx.scene.control.TextFormatter;
 import javafx.util.StringConverter;

@@ -1,6 +1,7 @@
 package com.alternabank.graphical.ui.application.user;
 
 import com.alternabank.engine.loan.dto.LoanDetails;
+import com.alternabank.engine.loan.event.PaymentDueEvent;
 import com.alternabank.engine.transaction.Transaction;
 import com.alternabank.engine.transaction.event.BilateralTransactionEvent;
 import com.alternabank.engine.transaction.event.UnilateralTransactionEvent;
@@ -18,21 +19,27 @@ import javafx.beans.property.SimpleListProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import org.controlsfx.control.Notifications;
 
 import java.net.URL;
 import java.util.*;
+import java.util.logging.Filter;
 import java.util.stream.Collectors;
 
 public class UserViewController implements Initializable {
 
     @FXML private TabPane userViewComponent;
     @FXML private Tab investmentTab;
+    @FXML private Tab paymentTab;
+    @FXML private Tab informationTab;
     @FXML private AppController appComponentController;
     @FXML private UserViewInformationController userViewInformationComponentController;
     @FXML private UserViewInvestmentController userViewInvestmentComponentController;
@@ -50,6 +57,10 @@ public class UserViewController implements Initializable {
         return borrowerLoanDetails;
     }
 
+    public List<LoanDetails> getBorrowerLoanDetails() {
+        return borrowerLoanDetails.get();
+    }
+
     public ListProperty<Transaction.Record> accountLedgerProperty() {
         return accountLedger;
     }
@@ -64,7 +75,6 @@ public class UserViewController implements Initializable {
 
     public void setAppController(AppController controller) {
         this.appComponentController = controller;
-        controller.selectedUserProperty().addListener((observable, oldValue, newValue) -> onUserSelection(newValue));
     }
 
     public AppController getAppController() {
@@ -75,31 +85,23 @@ public class UserViewController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         userViewInformationComponentController.setUserViewController(this);
         userViewInvestmentComponentController.setUserViewController(this);
-        userViewComponent.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (oldValue == investmentTab) {
-                Optional<ButtonType> result = userViewInvestmentComponentController.showQuitConfirmationDialog();
-                result.ifPresent(buttonType -> {
-                    if(buttonType == ButtonType.NO)
-                        userViewComponent.getSelectionModel().select(investmentTab);
-                    else userViewInvestmentComponentController.prepareForNewInvestmentRequest();
-                });
-            }
-        });
+        userViewPaymentComponentController.setUserViewController(this);
     }
 
     private void refreshAccountBalance(User selectedUser) {
         accountBalance.set(UserManager.getInstance().getAdmin().getCustomerManager().getCustomersByName().get(selectedUser.getName()).toCustomerDetails().getAccountDetails().getBalance());
     }
 
-    private void onUserSelection(User selectedUser) {
-        if (selectedUser != UserManager.getInstance().getAdmin()) {
-            loanerLoanDetails.set(FXCollections.observableList(UserManager.getInstance().getAdmin().getLoanManager().getLoanDetails().stream().filter(loanDetails -> loanDetails.getInvestmentByLenderName().containsKey(selectedUser.getName())).collect(Collectors.toList())));
-            borrowerLoanDetails.set(FXCollections.observableList(UserManager.getInstance().getAdmin().getLoanManager().getLoanDetails().stream().filter(loanDetails -> loanDetails.getBorrowerName().equals(selectedUser.getName())).collect(Collectors.toList())));
-            List<Transaction.Record> transactionRecordList = new LinkedList<>(UserManager.getInstance().getAdmin().getCustomerManager().getCustomersByName().get(selectedUser.getName()).toCustomerDetails().getAccountDetails().getTransactionRecords());
+    public void onUserSelection() {
+        if (appComponentController.getSelectedUser() != UserManager.getInstance().getAdmin()) {
+            loanerLoanDetails.set(new FilteredList<LoanDetails>(appComponentController.loanDetailsProperty(), loanDetails -> loanDetails.getInvestmentByLenderName().containsKey(appComponentController.getSelectedUser().getName())));
+            borrowerLoanDetails.set(new FilteredList<LoanDetails>(appComponentController.loanDetailsProperty(), loanDetails -> loanDetails.getBorrowerName().equals(appComponentController.getSelectedUser().getName())));
+            List<Transaction.Record> transactionRecordList = new LinkedList<>(UserManager.getInstance().getAdmin().getCustomerManager().getCustomersByName().get(appComponentController.getSelectedUser().getName()).toCustomerDetails().getAccountDetails().getTransactionRecords());
             Collections.reverse(transactionRecordList);
             accountLedger.set(FXCollections.observableList(transactionRecordList));
-            refreshAccountBalance(selectedUser);
+            refreshAccountBalance(appComponentController.getSelectedUser());
             userViewInvestmentComponentController.prepareForNewInvestmentRequest();
+            userViewPaymentComponentController.onUserSelection();
         }
     }
 
@@ -107,15 +109,24 @@ public class UserViewController implements Initializable {
         if(appComponentController.selectedUserProperty().get().getName().equals(event.getRecord().getInitiatorID())) {
             accountLedger.add(0, event.getRecord());
             refreshAccountBalance(appComponentController.getSelectedUser());
+            Notifications.create().text(event.getRecord().toString()).showInformation();
         }
     }
 
     public void bilateralTransactionExecuted(BilateralTransactionEvent event) {
-        if(appComponentController.selectedUserProperty().get().getName().equals(event.getRecord().getInitiatorID())
-        || appComponentController.selectedUserProperty().get().getName().equals(event.getRecord().getRecipientID())) {
+        if(appComponentController.getSelectedUser().getName().equals(event.getRecord().getInitiatorID())
+        || appComponentController.getSelectedUser().getName().equals(event.getRecord().getRecipientID())) {
             accountLedger.add(0, event.getRecord());
             refreshAccountBalance(appComponentController.getSelectedUser());
+            Notifications.create().text(event.getRecord().toString()).showInformation();
         }
+    }
+
+    public void paymentDue(PaymentDueEvent event) {
+        boolean isSelectedUserBorrower = event.getLoanDetails().getBorrowerName().equals(appComponentController.getSelectedUser().getName());
+        boolean isSelectedUserLender = event.getLoanDetails().getInvestmentByLenderName().containsKey(appComponentController.getSelectedUser().getName());
+        if (isSelectedUserBorrower || isSelectedUserLender)
+            Notifications.create().text(event.getNotification().toString()).showInformation();
     }
 
     public void loadedSuccessfully(XMLLoadSuccessEvent event) {

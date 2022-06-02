@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<SplitPane id="userViewInformation" fx:id="userViewInformationComponent" dividerPositions="0.8" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="610.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.user.information.UserViewInformationController">
+<SplitPane id="userViewInformation" fx:id="userViewInformationComponent" dividerPositions="0.75" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="610.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.user.information.UserViewInformationController">
   <items>
       <GridPane>
         <columnConstraints>

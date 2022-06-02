@@ -12,17 +12,17 @@ public class InvestmentRequest implements Investment.Request{
     private final double total;
     private final Set<String> categoriesOfInterest;
     private final double minimumInterestRate;
-    private final double minimumInterestPerTimeUnit;
+    private final double minimumInterest;
     private final int minimumLoanTerm;
     private final int maximumLoanOwnershipPercentage;
     private final int maximumBorrowerActiveLoans;
     private final Set<String> chosenLoanIDs;
 
-    public InvestmentRequest(String lenderName, double total, Set<String> categoriesOfInterest, double minimumInterestPerTimeUnit, double minimumInterestRate, int minimumLoanTerm, int maximumLoanOwnershipPercentage, int maximumBorrowerActiveLoans, Set<String> chosenLoanIDs) {
+    public InvestmentRequest(String lenderName, double total, Set<String> categoriesOfInterest, double minimumInterest, double minimumInterestRate, int minimumLoanTerm, int maximumLoanOwnershipPercentage, int maximumBorrowerActiveLoans, Set<String> chosenLoanIDs) {
         this.lenderName = lenderName;
         this.total = total;
-        this.categoriesOfInterest = Collections.unmodifiableSet(categoriesOfInterest);
-        this.minimumInterestPerTimeUnit = minimumInterestPerTimeUnit;
+        this.categoriesOfInterest = categoriesOfInterest;
+        this.minimumInterest = minimumInterest;
         this.minimumInterestRate = minimumInterestRate;
         this.minimumLoanTerm = minimumLoanTerm;
         this.maximumLoanOwnershipPercentage = maximumLoanOwnershipPercentage;
@@ -51,8 +51,8 @@ public class InvestmentRequest implements Investment.Request{
     }
 
     @Override
-    public double getMinimumInterestPerTimeUnit() {
-        return minimumInterestPerTimeUnit;
+    public double getMinimumInterest() {
+        return minimumInterest;
     }
 
     @Override
@@ -72,7 +72,7 @@ public class InvestmentRequest implements Investment.Request{
 
     @Override
     public Set<String> getChosenLoanIDs() {
-        return Collections.unmodifiableSet(chosenLoanIDs);
+        return chosenLoanIDs;
     }
 
     @Override
@@ -85,11 +85,11 @@ public class InvestmentRequest implements Investment.Request{
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         InvestmentRequest that = (InvestmentRequest) o;
-        return Double.compare(that.total, total) == 0 && Double.compare(that.minimumInterestPerTimeUnit, minimumInterestPerTimeUnit) == 0 && minimumLoanTerm == that.minimumLoanTerm && maximumLoanOwnershipPercentage == that.maximumLoanOwnershipPercentage && maximumBorrowerActiveLoans == that.maximumBorrowerActiveLoans && Objects.equals(lenderName, that.lenderName) && Objects.equals(categoriesOfInterest, that.categoriesOfInterest) && Objects.equals(chosenLoanIDs, that.chosenLoanIDs);
+        return Double.compare(that.total, total) == 0 && Double.compare(that.minimumInterest, minimumInterest) == 0 && minimumLoanTerm == that.minimumLoanTerm && maximumLoanOwnershipPercentage == that.maximumLoanOwnershipPercentage && maximumBorrowerActiveLoans == that.maximumBorrowerActiveLoans && Objects.equals(lenderName, that.lenderName) && Objects.equals(categoriesOfInterest, that.categoriesOfInterest) && Objects.equals(chosenLoanIDs, that.chosenLoanIDs);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(lenderName, total, categoriesOfInterest, minimumInterestPerTimeUnit, minimumLoanTerm, maximumLoanOwnershipPercentage, maximumBorrowerActiveLoans, chosenLoanIDs);
+        return Objects.hash(lenderName, total, categoriesOfInterest, minimumInterest, minimumLoanTerm, maximumLoanOwnershipPercentage, maximumBorrowerActiveLoans, chosenLoanIDs);
     }
 }

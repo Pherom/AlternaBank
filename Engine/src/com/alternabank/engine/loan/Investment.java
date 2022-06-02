@@ -4,13 +4,13 @@ import java.util.Set;
 
 public interface Investment {
 
-    int DEFAULT_VALUE = -1;
+    int MINIMUM_INTEREST = 0;
     int MINIMUM_TOTAL = 1;
-    int INTEREST_PER_TIME_UNIT_LOWER_BOUND = 0;
-    int INTEREST_RATE_LOWER_BOUND = 0;
-    int MAXIMUM_LOAN_OWNERSHIP_PERCENTAGE_LOWER_BOUND = 0;
-    int MAXIMUM_LOAN_OWNERSHIP_PERCENTAGE_UPPER_BOUND = 101;
-    int MINIMUM_MAXIMUM_BORROWER_ACTIVE_LOANS = 0;
+    int MINIMUM_INTEREST_RATE = 0;
+    int MINIMUM_LOAN_TERM_MIN = 0;
+    int MAXIMUM_LOAN_OWNERSHIP_PERCENTAGE_MIN = 0;
+    int MAXIMUM_LOAN_OWNERSHIP_PERCENTAGE_MAX = 100;
+    int MAXIMUM_BORROWER_ACTIVE_LOANS_MIN = 0;
 
     Request getOriginalRequest();
 
@@ -24,7 +24,7 @@ public interface Investment {
 
         double getMinimumInterestRate();
 
-        double getMinimumInterestPerTimeUnit();
+        double getMinimumInterest();
 
         int getMinimumLoanTerm();
 

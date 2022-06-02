@@ -34,6 +34,6 @@ public class AccountDetails {
     }
 
     public Set<Transaction.Record> getTransactionRecords() {
-        return Collections.unmodifiableSet(transactionRecords);
+        return transactionRecords;
     }
 }

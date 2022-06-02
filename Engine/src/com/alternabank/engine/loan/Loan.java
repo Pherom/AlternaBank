@@ -1,9 +1,13 @@
 package com.alternabank.engine.loan;
 
+import com.alternabank.engine.account.DepositAccount;
 import com.alternabank.engine.customer.CustomerManager;
 import com.alternabank.engine.loan.dto.LoanDetails;
+import com.alternabank.engine.loan.notification.PaymentNotification;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface Loan {
 
@@ -13,7 +17,13 @@ public interface Loan {
     double MAXIMUM_INTEREST = 100;
     int MINIMUM_TERM = 1;
 
+    void addPaymentNotification(PaymentNotification paymentNotification);
+
+    List<PaymentNotification> getPaymentNotifications();
+
     Request getOriginalRequest();
+
+    DepositAccount getAccount();
 
     Status getStatus();
 
@@ -35,6 +45,18 @@ public interface Loan {
 
     double getPaidTotal();
 
+    double getRequiredPrincipal();
+
+    double getRequiredInterest();
+
+    double getRequiredTotal();
+
+    double getAccumulatedDebtPrincipal();
+
+    double getAccumulatedDebtInterest();
+
+    double getAccumulatedDebtTotal();
+
     double getRemainingPrincipal();
 
     double getRemainingInterest();
@@ -45,29 +67,17 @@ public interface Loan {
 
     double getRemainingInvestment();
 
-    double getDelayedInstallmentPrincipal();
-
-    double getDelayedInstallmentInterest();
-
-    double getDelayedInstallmentTotal();
-
-    double getNextInstallmentPrincipal();
-
-    double getNextInstallmentInterest();
-
-    double getNextInstallmentTotal();
-
     double getInvestmentInterest(double investment);
 
     int getDelayedInstallmentCount();
 
     int getTimeSincePreviousInstallment();
 
-    int getTimeBeforeNextInstallment();
+    Optional<Integer> getTimeBeforeNextInstallment();
 
     int getPreviousInstallmentTime();
 
-    int getNextInstallmentTime();
+    Optional<Integer> getNextInstallmentTime();
 
     String toShortString();
 
@@ -75,7 +85,15 @@ public interface Loan {
 
     void investIn(CustomerManager.Customer customer, double total);
 
-    void executeNextInstallment();
+    void executeAccumulatedDebtPayment();
+
+    void executeRemainingTotalPayment();
+
+    void executeRiskPayment(double paymentTotal);
+
+    void setStatus(Status status);
+
+    void incrementDelayedInstallmentCount();
 
     interface Request {
 

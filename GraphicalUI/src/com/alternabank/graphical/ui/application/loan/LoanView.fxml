@@ -6,9 +6,9 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 
-<SplitPane fx:id="loanViewComponent" dividerPositions="0.7" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="240.0" prefWidth="1030.0" stylesheets="@LoanView.css" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.loan.LoanViewController">
+<SplitPane fx:id="loanViewComponent" dividerPositions="0.7" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="240.0" prefWidth="1030.0" stylesheets="@LoanView.css" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.loan.LoanViewController">
   <items>
-      <TableView id="loan" fx:id="loanTableView" minWidth="0.0">
+      <TableView id="loan" fx:id="loanTableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
          <columns>
             <TableColumn id="loanStatusColumn" fx:id="loanStatusTableColumn" editable="false" minWidth="0.0" prefWidth="65.0" text="Status" />
             <TableColumn id="loanIDColumn" fx:id="loanIDTableColumn" editable="false" prefWidth="85.0" text="ID" />
@@ -30,26 +30,26 @@
             <TableColumn id="loanTotalColumn" fx:id="loanTotalTableColumn" editable="false" prefWidth="60.0" text="Total" />
          </columns>
       </TableView>
-      <TabPane minHeight="0.0" minWidth="0.0" prefHeight="300.0" prefWidth="300.0" tabClosingPolicy="UNAVAILABLE">
+      <TabPane id="loanAdditionalDetails" fx:id="loanAdditionalDetailsTabPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="300.0" prefWidth="300.0" tabClosingPolicy="UNAVAILABLE">
         <tabs>
-          <Tab text="Investments">
+          <Tab id="pendingStageInformation" fx:id="pendingStageInformationTab" text="Investments">
             <content>
-              <fx:include fx:id="pendingLoanInformationViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" source="pending/PendingLoanInformationView.fxml" />
+              <fx:include fx:id="pendingLoanInformationViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" source="pending/PendingLoanInformationView.fxml" />
             </content>
           </Tab>
-          <Tab id="activeStageInformationTab" fx:id="activeStageInformationTab" text="Installments">
+          <Tab id="activeStageInformationTab" fx:id="activeStageInformationTab" disable="true" text="Installments">
             <content>
-              <fx:include fx:id="activeLoanInformationViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" source="active/ActiveLoanInformationView.fxml" />
+              <fx:include fx:id="activeLoanInformationViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" source="active/ActiveLoanInformationView.fxml" />
             </content>
           </Tab>
-            <Tab id="riskStageInformation" fx:id="riskStageInformationTab" text="Delay">
+            <Tab id="riskStageInformation" fx:id="riskStageInformationTab" disable="true" text="Delay">
               <content>
-                <fx:include fx:id="riskLoanInformationViewComponent" maxWidth="1.7976931348623157E308" source="risk/RiskLoanInformationView.fxml" />
+                <fx:include fx:id="riskLoanInformationViewComponent" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" source="risk/RiskLoanInformationView.fxml" />
               </content>
             </Tab>
-            <Tab id="finishedStageInformation" fx:id="finishedStageInformationTab" text="Summary">
+            <Tab id="finishedStageInformation" fx:id="finishedStageInformationTab" disable="true" text="Summary">
               <content>
-                <fx:include fx:id="finishedLoanInformationViewComponent" maxWidth="1.7976931348623157E308" source="finished/FinishedLoanInformationView.fxml" />
+                <fx:include fx:id="finishedLoanInformationViewComponent" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" source="finished/FinishedLoanInformationView.fxml" />
               </content>
             </Tab>
         </tabs>
