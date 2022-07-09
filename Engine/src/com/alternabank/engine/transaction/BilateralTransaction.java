@@ -1,15 +1,16 @@
 package com.alternabank.engine.transaction;
 
+import com.alternabank.dto.transaction.BilateralTransactionRecord;
+import com.alternabank.dto.transaction.type.BilateralTransactionTypeData;
 import com.alternabank.engine.time.TimeManager;
-import com.alternabank.engine.user.UserManager;
 
 public class BilateralTransaction extends AbstractTransaction implements Transaction.Bilateral {
 
-    private final Bilateral.Type type;
+    private final Type type;
     private final double interest;
     private final double principal;
 
-    public BilateralTransaction(Bilateral.Type type, double principal, double interest) {
+    public BilateralTransaction(Type type, double principal, double interest) {
         super(principal + interest);
         this.type = type;
         this.principal = principal;
@@ -18,78 +19,19 @@ public class BilateralTransaction extends AbstractTransaction implements Transac
 
 
     @Override
-    public Bilateral.Type getType() {
+    public Type getType() {
         return type;
     }
 
     @Override
-    public Transaction.Record.Bilateral execute(Initiator initiator, Recipient recipient) {
+    public BilateralTransactionRecord execute(Initiator initiator, Recipient recipient, int executionTime) {
         double initiatorBalanceBefore = initiator.getBalance();
         double recipientBalanceBefore = recipient.getBalance();
         Status status = type.getOperation().transact(initiator, recipient, getTotal());
-        return new Record(UserManager.getInstance().getAdmin().getTimeManager().getCurrentTime(), initiator.getID(), initiatorBalanceBefore, initiator.getBalance(), recipient.getID(), recipientBalanceBefore, recipient.getBalance(), status);
+        return new BilateralTransactionRecord(TimeManager.TIME_UNIT_NAME, getID(), Type.toDTO(type), executionTime, initiator.getID(), principal, interest, initiatorBalanceBefore, initiator.getBalance(), recipient.getID(), recipientBalanceBefore, recipient.getBalance(), Status.toDTO(status));
     }
 
-    public class Record extends AbstractTransaction.Record implements Transaction.Record.Bilateral {
-
-        private final String recipientID;
-        private final double recipientBalanceBefore;
-        private final double recipientBalanceAfter;
-
-        protected Record(int executionTime, String initiatorID, double initiatorBalanceBefore, double initiatorBalanceAfter, String recipientID, double recipientBalanceBefore, double recipientBalanceAfter, Status status) {
-            super(executionTime, initiatorID, initiatorBalanceBefore, initiatorBalanceAfter, status);
-            this.recipientID = recipientID;
-            this.recipientBalanceBefore = recipientBalanceBefore;
-            this.recipientBalanceAfter = recipientBalanceAfter;
-        }
-
-        @Override
-        public Transaction.Bilateral.Type getType() {
-            return type;
-        }
-
-        @Override
-        public String toString() {
-            return String.format(
-                    "(%s %d) %s TRANSACTION:" + System.lineSeparator()
-                            + "\tInitiator: %s (Balance: %.2f -> %.2f)" + System.lineSeparator()
-                            + "\tRecipient: %s (Balance: %.2f -> %.2f)" + System.lineSeparator()
-                            + "\tTotal: %.2f (Principal: %.2f, Interest: %.2f)" + System.lineSeparator()
-                            + "\tStatus: %s",
-                    UserManager.getInstance().getAdmin().getTimeManager().getTimeUnitName(),
-                    getExecutionTime(),
-                    type, getInitiatorID(), getInitiatorBalanceBefore(), getInitiatorBalanceAfter(),
-                    getRecipientID(), getRecipientBalanceBefore(), getRecipientBalanceAfter(),
-                    getTotal(), getPrincipalPart(), getInterestPart(), getStatus());
-        }
-
-        @Override
-        public String getRecipientID() {
-            return recipientID;
-        }
-
-        @Override
-        public double getPrincipalPart() {
-            return principal;
-        }
-
-        @Override
-        public double getInterestPart() {
-            return interest;
-        }
-
-        @Override
-        public double getRecipientBalanceBefore() {
-            return recipientBalanceBefore;
-        }
-
-        @Override
-        public double getRecipientBalanceAfter() {
-            return recipientBalanceAfter;
-        }
-    }
-
-    public enum Type implements Bilateral.Type {
+    public enum Type {
 
         TRANSFER((initiator, recipient, total) -> { if(initiator.deductFunds(total)) { recipient.addFunds(total); return Status.SUCCESSFUL; } return Status.FAILED; });
 
@@ -99,11 +41,19 @@ public class BilateralTransaction extends AbstractTransaction implements Transac
             this.operation = operation;
         }
 
-        @Override
         public Operation.Bilateral getOperation() {
             return operation;
         }
 
+        public static BilateralTransactionTypeData toDTO(Type type) {
+            BilateralTransactionTypeData result = null;
+            switch(type) {
+                case TRANSFER:
+                    result = BilateralTransactionTypeData.TRANSFER;
+                    break;
+            }
+            return result;
+        }
     }
 
 }

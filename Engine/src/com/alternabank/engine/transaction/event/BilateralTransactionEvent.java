@@ -1,5 +1,6 @@
 package com.alternabank.engine.transaction.event;
 
+import com.alternabank.dto.transaction.BilateralTransactionRecord;
 import com.alternabank.engine.transaction.Transaction;
 
 import java.util.Objects;
@@ -7,9 +8,9 @@ import java.util.Objects;
 public class BilateralTransactionEvent {
 
     private final Transaction.Initiator source;
-    private final Transaction.Record.Bilateral record;
+    private final BilateralTransactionRecord record;
 
-    public BilateralTransactionEvent(Transaction.Initiator source, Transaction.Record.Bilateral record) {
+    public BilateralTransactionEvent(Transaction.Initiator source, BilateralTransactionRecord record) {
         this.source = source;
         this.record = record;
     }
@@ -18,7 +19,7 @@ public class BilateralTransactionEvent {
         return source;
     }
 
-    public Transaction.Record.Bilateral getRecord() {
+    public BilateralTransactionRecord getRecord() {
         return record;
     }
 

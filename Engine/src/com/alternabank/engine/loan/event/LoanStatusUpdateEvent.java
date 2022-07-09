@@ -1,23 +1,24 @@
 package com.alternabank.engine.loan.event;
 
+import com.alternabank.dto.loan.status.LoanStatusData;
 import com.alternabank.engine.loan.Loan;
-import com.alternabank.engine.loan.dto.LoanDetails;
+import com.alternabank.dto.loan.LoanDetails;
 
 public class LoanStatusUpdateEvent {
 
-    private final Loan.Status oldStatus;
+    private final LoanStatusData oldStatus;
     private final LoanDetails loanDetails;
 
-    public LoanStatusUpdateEvent(Loan.Status oldStatus, LoanDetails loanDetails) {
+    public LoanStatusUpdateEvent(LoanStatusData oldStatus, LoanDetails loanDetails) {
         this.oldStatus = oldStatus;
         this.loanDetails = loanDetails;
     }
 
-    public Loan.Status getOldStatus() {
+    public LoanStatusData getOldStatus() {
         return oldStatus;
     }
 
-    public Loan.Status getNewStatus() {
+    public LoanStatusData getNewStatus() {
         return loanDetails.getStatus();
     }
 

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.scene.control.ListView?>
-
-
-<ListView id="accountLedgerListView" fx:id="accountLedgerListViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="450.0" prefWidth="300.0" stylesheets="@AccountLedgerListView.css" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.graphical.ui.application.account.AccountLedgerListViewController" />

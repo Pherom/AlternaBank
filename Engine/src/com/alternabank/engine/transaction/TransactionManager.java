@@ -1,31 +1,29 @@
 package com.alternabank.engine.transaction;
 
-import com.alternabank.engine.customer.CustomerManager;
-import com.alternabank.engine.loan.LoanManager;
 import com.alternabank.engine.transaction.event.listener.BilateralTransactionListener;
 import com.alternabank.engine.transaction.event.listener.UnilateralTransactionListener;
-import com.alternabank.engine.user.Admin;
+import com.alternabank.engine.Engine;
 
 public class TransactionManager {
 
-    private final Admin admin;
+    private final Engine engine;
 
-    public TransactionManager(Admin admin) {
-        this.admin = admin;
+    public TransactionManager(Engine engine) {
+        this.engine = engine;
     }
 
-    public Admin getAdmin() {
-        return admin;
+    public Engine getEngine() {
+        return engine;
     }
 
     public void addUnilateralTransactionListener(UnilateralTransactionListener listener) {
-        admin.getCustomerManager().addUnilateralTransactionListener(listener);
-        admin.getLoanManager().addUnilateralTransactionListener(listener);
+        engine.getCustomerManager().addUnilateralTransactionListener(listener);
+        engine.getLoanManager().addUnilateralTransactionListener(listener);
     }
 
     public void addBilateralTransactionListener(BilateralTransactionListener listener) {
-        admin.getCustomerManager().addBilateralTransactionListener(listener);
-        admin.getLoanManager().addBilateralTransactionListener(listener);
+        engine.getCustomerManager().addBilateralTransactionListener(listener);
+        engine.getLoanManager().addBilateralTransactionListener(listener);
     }
 
 }

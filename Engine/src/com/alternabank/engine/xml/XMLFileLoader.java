@@ -1,198 +1,121 @@
 package com.alternabank.engine.xml;
 
+import com.alternabank.dto.loan.request.LoanRequest;
+import com.alternabank.engine.customer.CustomerManager;
 import com.alternabank.engine.customer.state.CustomerManagerState;
 import com.alternabank.engine.loan.state.LoanManagerState;
-import com.alternabank.engine.loan.request.LoanRequest;
-import com.alternabank.engine.transaction.UnilateralTransaction;
-import com.alternabank.engine.user.Admin;
-import com.alternabank.engine.xml.event.*;
-import com.alternabank.engine.xml.event.listener.*;
+import com.alternabank.engine.Engine;
+import com.alternabank.engine.time.TimeManager;
 import com.alternabank.engine.xml.generated.*;
+import com.alternabank.engine.xml.result.*;
+import com.alternabank.engine.xml.result.failue.XMLCategoryLoadFailureCause;
+import com.alternabank.engine.xml.result.failue.XMLLoadFailureCause;
+import com.alternabank.engine.xml.result.failue.XMLLoanLoadFailureCause;
 
-import javax.swing.event.EventListenerList;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import java.nio.file.*;
-import java.util.Arrays;
+import java.io.InputStream;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class XMLFileLoader implements XMLLoader{
 
-    private final Admin admin;
-    private boolean resumeLoad = false;
-    private Path filePath;
-    private Path lastLoadedFilePath = null;
+    private final Engine engine;
+    private InputStream inputStream;
+    private CustomerManager.Customer currentUser;
     private AbsDescriptor loadedDescriptor;
-    private final EventListenerList eventListeners = new EventListenerList();
 
-    public XMLFileLoader(Admin admin) {
-        this.admin = admin;
+    public XMLFileLoader(Engine engine) {
+        this.engine = engine;
     }
 
     @Override
-    public Admin getAdmin() {
-        return admin;
+    public Engine getEngine() {
+        return engine;
     }
 
     @Override
-    public void loadSystemFromFile(Path filePath) {
-        this.filePath = filePath;
-        boolean validFilePath = checkFilePath();
-        if(validFilePath) {
-            CustomerManagerState customerManagerState = admin.getCustomerManager().createCustomerManagerState();
-            LoanManagerState loanManagerState = admin.getLoanManager().createLoanManagerState();
-            admin.getLoanManager().reset();
-            admin.getCustomerManager().reset();
-            resumeLoad = true;
-            loadDescriptor();
-            loadCustomers();
-            if (resumeLoad)
-                loadLoanCategories();
-            if (resumeLoad)
-                loadLoans();
+    public XMLLoadResult loadXML(String username, InputStream inputStream) {
+        XMLLoadResult xmlLoadResult;
+        this.currentUser = engine.getCustomerManager().getCustomersByName().get(username);
+        this.inputStream = inputStream;
+        CustomerManagerState customerManagerState = engine.getCustomerManager().createCustomerManagerState();
+        LoanManagerState loanManagerState = engine.getLoanManager().createLoanManagerState();
+        List<String> errorMessages = new LinkedList<String>();
+        List<XMLLoadFailureCause<String, Engine>> categoryLoadFailureCauses;
+        List<XMLLoadFailureCause<AbsLoan, Engine>> loanLoadFailureCauses;
 
-            if (resumeLoad) {
-                lastLoadedFilePath = filePath;
-                resumeLoad = false;
-                admin.getTimeManager().resetCurrentTime();
-                Arrays.stream(eventListeners.getListeners(XMLLoadSuccessListener.class)).forEach(listener -> listener.loadedSuccessfully(new XMLLoadSuccessEvent(this)));
-            }
-            else {
-                admin.getCustomerManager().restoreCustomerManager(customerManagerState);
-                admin.getLoanManager().restoreLoanManager(loanManagerState);
-            }
+        loadDescriptor();
+        errorMessages.addAll(loadLoanCategories());
+        errorMessages.addAll(loadLoans());
+
+        if (errorMessages.isEmpty()) {
+            xmlLoadResult = new XMLLoadResult(XMLLoadStatus.SUCCESS, "XML file loaded successfully");
         }
-    }
+        else {
+            engine.getCustomerManager().restoreCustomerManager(customerManagerState);
+            engine.getLoanManager().restoreLoanManager(loanManagerState);
+            StringBuilder errorMessageBuilder = new StringBuilder("XML file load failed");
+            errorMessages.forEach(message -> errorMessageBuilder.append(String.format("%s%s", System.lineSeparator(), message)));
+            xmlLoadResult = new XMLLoadResult(XMLLoadStatus.FAILURE, errorMessageBuilder.toString());
+        }
 
-    @Override
-    public void addFileLoadFailureListener(XMLFileLoadFailureListener listener) {
-        eventListeners.add(XMLFileLoadFailureListener.class, listener);
-    }
-
-    @Override
-    public void addCategoryLoadFailureListener(XMLCategoryLoadFailureListener listener) {
-        eventListeners.add(XMLCategoryLoadFailureListener.class, listener);
-    }
-
-    @Override
-    public void addCustomerLoadFailureListener(XMLCustomerLoadFailureListener listener) {
-        eventListeners.add(XMLCustomerLoadFailureListener.class, listener);
-    }
-
-    @Override
-    public void addLoanLoadFailureListener(XMLLoanLoadFailureListener listener) {
-        eventListeners.add(XMLLoanLoadFailureListener.class, listener);
-    }
-
-    @Override
-    public void addLoadSuccessListener(XMLLoadSuccessListener listener) {
-        eventListeners.add(XMLLoadSuccessListener.class, listener);
-    }
-
-    private boolean checkFilePath() {
-        boolean valid;
-
-        List<XMLLoadFailureEvent.Cause<Path>> loadFailureCauses = Stream.of(XMLFileLoadFailureEvent.Cause.values())
-                .filter(cause -> cause.getPredicate().test(filePath))
-                .collect(Collectors.toList());
-
-        valid = loadFailureCauses.isEmpty();
-
-        if(!valid)
-            Arrays.stream(eventListeners.getListeners(XMLFileLoadFailureListener.class)).forEach(listener -> listener.fileLoadFailed(new XMLFileLoadFailureEvent(this, loadFailureCauses, filePath)));
-
-        return valid;
-    }
-
-    @Override
-    public void stopLoading() {
-        this.resumeLoad = false;
-    }
-
-    @Override
-    public Path getLastLoadedFilePath() {
-        return lastLoadedFilePath;
+        return xmlLoadResult;
     }
 
     private void loadDescriptor() {
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(AbsDescriptor.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            this.loadedDescriptor = (AbsDescriptor) jaxbUnmarshaller.unmarshal(filePath.toFile());
+            this.loadedDescriptor = (AbsDescriptor) jaxbUnmarshaller.unmarshal(inputStream);
         } catch (JAXBException e) {
             e.printStackTrace();
         }
     }
 
-    private void loadLoanCategories() {
+    private List<String> loadLoanCategories() {
+        List<String> categoryLoadErrorMessages = new LinkedList<>();
         loadedDescriptor.getAbsCategories().getAbsCategory().stream()
-                .filter(loadedCategory -> resumeLoad && checkCategory(loadedCategory))
                 .forEach(loadedCategory -> {
-                    admin.getLoanManager().addCategory(loadedCategory); });
+                    List<XMLLoadFailureCause<String, Engine>> loadFailureCauses = checkCategory(loadedCategory);
+                    if (loadFailureCauses.isEmpty())
+                        engine.getLoanManager().addCategory(loadedCategory);
+                    else categoryLoadErrorMessages.addAll(loadFailureCauses.stream().map(cause -> cause.getErrorMessage(loadedCategory)).collect(Collectors.toList()));
+                });
+        return categoryLoadErrorMessages;
     }
 
-    private boolean checkCategory(String loadedCategory) {
-        boolean valid;
-        List<XMLLoadFailureEvent.Cause<String>> loadFailureCauses = Stream.of(XMLCategoryLoadFailureEvent.Cause.values())
-                .filter(cause -> cause.getPredicate().test(loadedCategory))
+    private List<XMLLoadFailureCause<String, Engine>> checkCategory(String loadedCategory) {
+        List<XMLLoadFailureCause<String, Engine>> loadFailureCauses = Stream.of(XMLCategoryLoadFailureCause.values())
+                .filter(cause -> cause.getPredicate().test(loadedCategory, engine))
                 .collect(Collectors.toList());
 
-        valid = loadFailureCauses.isEmpty();
-
-        if(!valid)
-            Arrays.stream(eventListeners.getListeners(XMLCategoryLoadFailureListener.class)).forEach(listener -> listener.categoryLoadFailed(new XMLCategoryLoadFailureEvent(this, loadFailureCauses, loadedCategory)));
-        return valid;
+        return loadFailureCauses;
     }
 
-    private void loadCustomers() {
-        loadedDescriptor.getAbsCustomers().getAbsCustomer().stream()
-                .filter(loadedCustomer -> resumeLoad && checkCustomer(loadedCustomer))
-                .forEach(loadedCustomer -> {
-                    admin.getCustomerManager().createCustomer((loadedCustomer.getName()))
-                        .getAccount().executeTransaction(UnilateralTransaction.Type.DEPOSIT, loadedCustomer.getAbsBalance()); });
-    }
-
-    private boolean checkCustomer(AbsCustomer loadedCustomer) {
-        boolean valid;
-
-        List<XMLLoadFailureEvent.Cause<AbsCustomer>> loadFailureCauses = Stream.of(XMLCustomerLoadFailureEvent.Cause.values())
-                .filter(cause -> cause.getPredicate().test(loadedCustomer))
-                .collect(Collectors.toList());
-
-        valid = loadFailureCauses.isEmpty();
-
-        if(!valid)
-            Arrays.stream(eventListeners.getListeners(XMLCustomerLoadFailureListener.class)).forEach(listener -> listener.customerLoadFailed(new XMLCustomerLoadFailureEvent(this, loadFailureCauses, loadedCustomer)));
-
-        return valid;
-    }
-
-    private void loadLoans() {
+    private List<String> loadLoans() {
+        List<String> loanLoadErrorMessages = new LinkedList<>();
         loadedDescriptor.getAbsLoans().getAbsLoan().stream()
-                .filter(loadedLoan -> resumeLoad && checkLoan(loadedLoan))
                 .forEach(loadedLoan -> {
-                    admin.getCustomerManager().getCustomersByName().get(loadedLoan.getAbsOwner())
-                        .postLoanRequest(LoanRequest.createByInterestPerPayment(loadedLoan.getAbsOwner(), loadedLoan.getAbsCategory(),
+                    List<XMLLoadFailureCause<AbsLoan, Engine>> loadFailureCauses = checkLoan(loadedLoan);
+                    if (loadFailureCauses.isEmpty())
+                        currentUser.postLoanRequest(LoanRequest.createByInterestPerPayment(currentUser.getName(), loadedLoan.getAbsCategory(),
                                 loadedLoan.getAbsCapital(), loadedLoan.getAbsPaysEveryYaz(), loadedLoan.getAbsIntristPerPayment(),
-                                loadedLoan.getAbsTotalYazTime(), loadedLoan.getId())); });
+                                loadedLoan.getAbsTotalYazTime(), loadedLoan.getId()));
+                    else loanLoadErrorMessages.addAll(loadFailureCauses.stream().map(cause -> cause.getErrorMessage(loadedLoan)).collect(Collectors.toList()));
+                });
+        return loanLoadErrorMessages;
     }
 
-    private boolean checkLoan(AbsLoan loadedLoan) {
-        boolean valid;
-
-        List<XMLLoadFailureEvent.Cause<AbsLoan>> loadFailureCauses = Stream.of(XMLLoanLoadFailureEvent.Cause.values())
-                .filter(cause -> cause.getPredicate().test(loadedLoan))
+    private List<XMLLoadFailureCause<AbsLoan, Engine>> checkLoan(AbsLoan loadedLoan) {
+        List<XMLLoadFailureCause<AbsLoan, Engine>> loadFailureCauses = Stream.of(XMLLoanLoadFailureCause.values())
+                .filter(cause -> cause.getPredicate().test(loadedLoan, engine))
                 .collect(Collectors.toList());
 
-        valid = loadFailureCauses.isEmpty();
-
-        if(!valid)
-            Arrays.stream(eventListeners.getListeners(XMLLoanLoadFailureListener.class)).forEach(listener -> listener.loanLoadFailed(new XMLLoanLoadFailureEvent(this, loadFailureCauses, loadedLoan)));
-
-        return valid;
+        return loadFailureCauses;
     }
 
 }

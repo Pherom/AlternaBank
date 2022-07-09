@@ -1,13 +1,19 @@
 package com.alternabank.engine.customer;
 
-import com.alternabank.engine.loan.Investment;
+import com.alternabank.dto.loan.request.InvestmentRequest;
 
 import java.util.Set;
 
 public interface Lender {
 
-    boolean postInvestmentRequest(Investment.Request investmentRequest);
+    String getName();
 
-    Set<String> getInvestedLoansIDs();
+    boolean postInvestmentRequest(InvestmentRequest investmentRequest);
+
+    boolean postRemainingLoanPortionForSale(String loanID);
+
+    boolean buyRemainingLoanPortion(String loanID, String lenderName);
+
+    Set<String> getInvestedLoanIDs();
 
 }

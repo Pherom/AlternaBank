@@ -1,13 +1,14 @@
 package com.alternabank.engine.transaction.event;
 
+import com.alternabank.dto.transaction.UnilateralTransactionRecord;
 import com.alternabank.engine.transaction.Transaction;
 
 public class UnilateralTransactionEvent {
 
     private final Transaction.Initiator source;
-    private final Transaction.Record.Unilateral record;
+    private final UnilateralTransactionRecord record;
 
-    public UnilateralTransactionEvent(Transaction.Initiator source, Transaction.Record.Unilateral record) {
+    public UnilateralTransactionEvent(Transaction.Initiator source, UnilateralTransactionRecord record) {
         this.source = source;
         this.record = record;
     }
@@ -16,7 +17,7 @@ public class UnilateralTransactionEvent {
         return source;
     }
 
-    public Transaction.Record.Unilateral getRecord() {
+    public UnilateralTransactionRecord getRecord() {
         return record;
     }
 }

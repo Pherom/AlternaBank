@@ -1,13 +1,16 @@
 package com.alternabank.engine.loan;
 
+import com.alternabank.dto.loan.notification.LoanStatusChangeNotification;
+import com.alternabank.dto.loan.request.LoanRequest;
+import com.alternabank.dto.loan.status.LoanStatusData;
 import com.alternabank.engine.account.DepositAccount;
-import com.alternabank.engine.customer.CustomerManager;
-import com.alternabank.engine.loan.dto.LoanDetails;
-import com.alternabank.engine.loan.notification.PaymentNotification;
+import com.alternabank.dto.loan.LoanDetails;
+import com.alternabank.dto.loan.notification.PaymentNotification;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 public interface Loan {
 
@@ -19,15 +22,19 @@ public interface Loan {
 
     void addPaymentNotification(PaymentNotification paymentNotification);
 
+    void addLoanStatusChangeNotification(LoanStatusChangeNotification loanStatusChangeNotification);
+
     List<PaymentNotification> getPaymentNotifications();
 
-    Request getOriginalRequest();
+    List<LoanStatusChangeNotification> getLoanStatusChangeNotifications();
+
+    LoanRequest getOriginalRequest();
 
     DepositAccount getAccount();
 
     Status getStatus();
 
-    Map<String, Double> getInvestmentByLenderName();
+    Map<String, List<Investment>> getInvestmentsByLenderName();
 
     Map<Status, Integer> getStatusTimes();
 
@@ -65,25 +72,41 @@ public interface Loan {
 
     double getTotalInvestment();
 
+    double getLenderTotalInvestment(String lenderName);
+
+    double getLenderOwnershipRate(String lenderName);
+
+    double getLenderRemainingPrincipalPortion(String lenderName);
+
+    double getLenderRemainingInterestPortion(String lenderName);
+
+    double getLenderRemainingTotalPortion(String lenderName);
+
+    double getLenderPaidPrincipalPortion(String lenderName);
+
+    double getLenderPaidInterestPortion(String lenderName);
+
+    double getLenderPaidTotalPortion(String lenderName);
+
     double getRemainingInvestment();
 
     double getInvestmentInterest(double investment);
 
     int getDelayedInstallmentCount();
 
-    int getTimeSincePreviousInstallment();
+    OptionalInt getTimeSincePreviousInstallment();
 
-    Optional<Integer> getTimeBeforeNextInstallment();
+    OptionalInt getTimeBeforeNextInstallment();
 
-    int getPreviousInstallmentTime();
+    OptionalInt getPreviousInstallmentTime();
 
     Optional<Integer> getNextInstallmentTime();
 
     String toShortString();
 
-    LoanDetails toLoanDetails();
+    LoanDetails toDTO();
 
-    void investIn(CustomerManager.Customer customer, double total);
+    void addInvestment(Investment investment);
 
     void executeAccumulatedDebtPayment();
 
@@ -95,41 +118,30 @@ public interface Loan {
 
     void incrementDelayedInstallmentCount();
 
-    interface Request {
-
-        String getBorrowerName();
-
-        String getCategory();
-
-        double getCapital();
-
-        double getTotalInterest();
-
-        double getTotal();
-
-        int getInstallmentPeriod();
-
-        int getInstallmentCount();
-
-        double getInterestPerInstallment();
-
-        double getInterestPerTimeUnit();
-
-        double getPrincipalPerInstallment();
-
-        double getTotalPerInstallment();
-
-        double getInterestRate();
-
-        int getTerm();
-
-        String getID();
-
-    }
+    boolean isInstallmentTime();
 
     enum Status {
 
-        PENDING, ACTIVE, RISK, FINISHED
+        PENDING, ACTIVE, RISK, FINISHED;
+
+        public static LoanStatusData toDTO(Status status) {
+            LoanStatusData result = null;
+            switch (status) {
+                case PENDING:
+                    result = LoanStatusData.PENDING;
+                    break;
+                case ACTIVE:
+                    result = LoanStatusData.ACTIVE;
+                    break;
+                case RISK:
+                    result = LoanStatusData.RISK;
+                    break;
+                case FINISHED:
+                    result = LoanStatusData.FINISHED;
+                    break;
+            }
+            return result;
+        }
 
     }
 }

@@ -1,6 +1,9 @@
 package com.alternabank.engine.account;
 
-import com.alternabank.engine.account.dto.AccountDetails;
+import com.alternabank.dto.account.AccountDetails;
+import com.alternabank.dto.transaction.TransactionRecord;
+import com.alternabank.dto.transaction.BilateralTransactionRecord;
+import com.alternabank.dto.transaction.UnilateralTransactionRecord;
 import com.alternabank.engine.transaction.BilateralTransaction;
 import com.alternabank.engine.transaction.Transaction;
 import com.alternabank.engine.transaction.UnilateralTransaction;
@@ -9,6 +12,7 @@ import com.alternabank.engine.transaction.event.UnilateralTransactionEvent;
 import com.alternabank.engine.transaction.event.listener.BilateralTransactionListener;
 import com.alternabank.engine.transaction.event.listener.UnilateralTransactionListener;
 
+import java.sql.Array;
 import java.util.*;
 
 public abstract class AbstractAccount implements Account, Transaction.Initiator, Transaction.Recipient{
@@ -61,30 +65,35 @@ public abstract class AbstractAccount implements Account, Transaction.Initiator,
     }
 
     @Override
-    public AccountDetails toAccountDetails() {
-        return new AccountDetails(this);
+    public AccountDetails toDTO(int oldLedgerVersion) {
+        return new AccountDetails(toString(), id, balance, ledger.getRecords(oldLedgerVersion), ledger.getVersion());
     }
 
     @Override
-    public Transaction.Record.Unilateral executeTransaction(UnilateralTransaction.Type type, double total) {
+    public AccountDetails toDTO() {
+        return toDTO(0);
+    }
+
+    @Override
+    public UnilateralTransactionRecord executeTransaction(UnilateralTransaction.Type type, double total, int executionTime) {
         Transaction.Unilateral transaction = new UnilateralTransaction(type, total);
-        Transaction.Record.Unilateral record = transaction.execute(this);
+        UnilateralTransactionRecord record = transaction.execute(this, executionTime);
         ledger.log(record);
         Arrays.stream(getEventListeners().getListeners(UnilateralTransactionListener.class)).forEach(listener -> listener.unilateralTransactionExecuted(new UnilateralTransactionEvent(this, record)));
         return record;
     }
 
     @Override
-    public Transaction.Record.Bilateral executeTransaction(BilateralTransaction.Type type, Account recipient, double principal, double interest) {
+    public BilateralTransactionRecord executeTransaction(BilateralTransaction.Type type, Account recipient, double principal, double interest, int executionTime) {
         Transaction.Bilateral transaction = new BilateralTransaction(type, principal, interest);
-        Transaction.Record.Bilateral record = recipient.respondToTransaction(this, transaction);
+        BilateralTransactionRecord record = recipient.respondToTransaction(this, transaction, executionTime);
         ledger.log(record);
         return record;
     }
 
     @Override
-    public Transaction.Record.Bilateral respondToTransaction(Transaction.Initiator initiator, Transaction.Bilateral transaction) {
-        Transaction.Record.Bilateral record = transaction.execute(initiator, this);
+    public BilateralTransactionRecord respondToTransaction(Transaction.Initiator initiator, Transaction.Bilateral transaction, int executionTime) {
+        BilateralTransactionRecord record = transaction.execute(initiator, this, executionTime);
         ledger.log(record);
         Arrays.stream(getEventListeners().getListeners(BilateralTransactionListener.class)).forEach(listener -> listener.bilateralTransactionExecuted(new BilateralTransactionEvent(initiator, record)));
         return record;
@@ -111,7 +120,11 @@ public abstract class AbstractAccount implements Account, Transaction.Initiator,
 
     public class Ledger implements Account.Ledger {
 
-        private final Set<Transaction.Record> records = new LinkedHashSet<>();
+        private final List<TransactionRecord> records = new ArrayList<>();
+
+        public int getVersion() {
+            return records.size();
+        }
 
         @Override
         public Account getAccount() {
@@ -119,11 +132,18 @@ public abstract class AbstractAccount implements Account, Transaction.Initiator,
         }
 
         @Override
-        public Set<Transaction.Record> getRecords() {
+        public List<TransactionRecord> getRecords() {
             return records;
         }
 
-        private void log(Transaction.Record record) {
+        @Override
+        public List<TransactionRecord> getRecords(int fromIndex) {
+            if (fromIndex < 0 || fromIndex > records.size())
+                fromIndex = 0;
+            return records.subList(fromIndex, records.size());
+        }
+
+        private void log(TransactionRecord record) {
             records.add(record);
         }
 

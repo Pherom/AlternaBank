@@ -1,5 +1,9 @@
 package com.alternabank.engine.transaction;
 
+import com.alternabank.dto.transaction.BilateralTransactionRecord;
+import com.alternabank.dto.transaction.status.TransactionStatusData;
+import com.alternabank.dto.transaction.UnilateralTransactionRecord;
+
 public interface Transaction {
 
     int getID();
@@ -8,69 +12,17 @@ public interface Transaction {
 
     interface Unilateral extends Transaction {
 
-        Type getType();
+        UnilateralTransaction.Type getType();
 
-        Record.Unilateral execute(Initiator initiator);
-
-        interface Type {
-
-            Operation.Unilateral getOperation();
-
-        }
+        UnilateralTransactionRecord execute(Initiator initiator, int executionTime);
 
     }
 
     interface Bilateral extends Transaction {
 
-        Type getType();
+        BilateralTransaction.Type getType();
 
-        Record.Bilateral execute(Initiator initiator, Recipient recipient);
-
-        interface Type {
-
-            Operation.Bilateral getOperation();
-
-        }
-
-    }
-
-    interface Record {
-
-        int getID();
-
-        int getExecutionTime();
-
-        String getInitiatorID();
-
-        double getInitiatorBalanceBefore();
-
-        double getInitiatorBalanceAfter();
-
-        double getTotal();
-
-        Status getStatus();
-
-        interface Unilateral extends Record {
-
-            Transaction.Unilateral.Type getType();
-
-        }
-
-        interface Bilateral extends Record{
-
-            Transaction.Bilateral.Type getType();
-
-            String getRecipientID();
-
-            double getPrincipalPart();
-
-            double getInterestPart();
-
-            double getRecipientBalanceBefore();
-
-            double getRecipientBalanceAfter();
-
-        }
+        BilateralTransactionRecord execute(Initiator initiator, Recipient recipient, int executionTime);
 
     }
 
@@ -116,7 +68,20 @@ public interface Transaction {
 
     enum Status {
 
-        FAILED, SUCCESSFUL
+        FAILED, SUCCESSFUL;
+
+        public static TransactionStatusData toDTO(Status status) {
+            TransactionStatusData result = null;
+            switch (status) {
+                case FAILED:
+                    result = TransactionStatusData.FAILED;
+                    break;
+                case SUCCESSFUL:
+                    result = TransactionStatusData.SUCCESSFUL;
+                    break;
+            }
+            return result;
+        }
 
     }
 }

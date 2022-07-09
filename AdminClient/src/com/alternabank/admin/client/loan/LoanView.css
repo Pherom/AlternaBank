@@ -1,0 +1,23 @@
+/*noinspection CssInvalidPseudoSelector*/
+.table-view .status-cell:pending {
+    -fx-background-color: ROYALBLUE;
+}
+
+/*noinspection CssInvalidPseudoSelector*/
+.table-view .status-cell:active {
+    -fx-background-color: SEAGREEN;
+}
+
+/*noinspection CssInvalidPseudoSelector*/
+.table-view .status-cell:risk {
+    -fx-background-color: CRIMSON;
+}
+
+/*noinspection CssInvalidPseudoSelector*/
+.table-view .status-cell:finished {
+    -fx-background-color: GREEN;
+}
+
+.table-view .status-cell {
+    -fx-text-fill: WHITE;
+}

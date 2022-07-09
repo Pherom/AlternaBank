@@ -1,7 +1,7 @@
 package com.alternabank.engine.loan.event;
 
-import com.alternabank.engine.loan.dto.LoanDetails;
-import com.alternabank.engine.loan.notification.PaymentNotification;
+import com.alternabank.dto.loan.LoanDetails;
+import com.alternabank.dto.loan.notification.PaymentNotification;
 
 public class PaymentDueEvent {
 

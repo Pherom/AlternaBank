@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<SplitPane id="userViewInformation" fx:id="userViewInformationComponent" dividerPositions="0.75" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="610.0" prefWidth="1300.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.client.user.information.UserViewInformationController">
+  <items>
+      <GridPane>
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" vgrow="NEVER" />
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" vgrow="NEVER" />
+          <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="5.0">
+               <children>
+                  <Label text="Loaned:">
+                     <padding>
+                        <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+                     </padding>
+                  </Label>
+                  <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="0.0" />
+                  <Button id="buyInvestments" fx:id="buyInvestmentsButton" mnemonicParsing="false" onAction="#onBuyInvestmentsRequest" text="Buy Investments" />
+                  <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="0.0">
+                     <HBox.margin>
+                        <Insets left="2.0" />
+                     </HBox.margin>
+                  </Separator>
+                  <Button id="sellSelected" fx:id="sellSelectedInvestmentButton" mnemonicParsing="false" onAction="#onSellSelectedInvestmentRequest" text="Sell Selected" />
+               </children>
+               <padding>
+                  <Insets bottom="2.0" top="2.0" />
+               </padding>
+            </HBox>
+            <fx:include fx:id="loanerLoanViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" source="../../loan/LoanView.fxml" GridPane.rowIndex="1" />
+            <fx:include fx:id="borrowerLoanViewComponent" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" source="../../loan/LoanView.fxml" GridPane.rowIndex="3" />
+            <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.rowIndex="2">
+               <children>
+                  <Label text="Borrowed:">
+                     <padding>
+                        <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+                     </padding>
+                  </Label>
+                  <Separator orientation="VERTICAL" prefHeight="25.0" prefWidth="0.0" />
+                  <Button id="postNewLoan" fx:id="postNewLoanButton" mnemonicParsing="false" onAction="#onNewLoanRequest" text="Post New Loan" />
+               </children>
+               <padding>
+                  <Insets bottom="2.0" top="2.0" />
+               </padding>
+            </HBox>
+         </children>
+      </GridPane>
+      <fx:include fx:id="userAccountTransactionViewComponent" source="transaction/UserAccountTransactionView.fxml" />
+  </items>
+</SplitPane>

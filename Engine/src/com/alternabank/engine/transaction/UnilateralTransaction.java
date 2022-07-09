@@ -1,56 +1,31 @@
 package com.alternabank.engine.transaction;
 
+import com.alternabank.dto.transaction.UnilateralTransactionRecord;
+import com.alternabank.dto.transaction.type.UnilateralTransactionTypeData;
 import com.alternabank.engine.time.TimeManager;
-import com.alternabank.engine.user.UserManager;
 
 public class UnilateralTransaction extends AbstractTransaction implements Transaction.Unilateral {
 
-    private final Unilateral.Type type;
+    private final Type type;
 
-    public UnilateralTransaction(Unilateral.Type type, double total) {
+    public UnilateralTransaction(Type type, double total) {
         super(total);
         this.type = type;
     }
 
     @Override
-    public Unilateral.Type getType() {
+    public Type getType() {
         return type;
     }
 
     @Override
-    public Transaction.Record.Unilateral execute(Initiator initiator) {
+    public UnilateralTransactionRecord execute(Initiator initiator, int executionTime) {
         double balanceBefore = initiator.getBalance();
         Status status = type.getOperation().transact(initiator, getTotal());
-        return new Record(UserManager.getInstance().getAdmin().getTimeManager().getCurrentTime(), initiator.getID(), balanceBefore, initiator.getBalance(), status);
+        return new UnilateralTransactionRecord(TimeManager.TIME_UNIT_NAME, getID(), Type.toDTO(type), executionTime, initiator.getID(), getTotal(), balanceBefore, initiator.getBalance(), Status.toDTO(status));
     }
 
-    public class Record extends AbstractTransaction.Record implements Transaction.Record.Unilateral {
-
-        private Record(int executionTime, String initiatorID, double initiatorBalanceBefore, double initiatorBalanceAfter, Status status) {
-            super(executionTime, initiatorID, initiatorBalanceBefore, initiatorBalanceAfter, status);
-        }
-
-        @Override
-        public Transaction.Unilateral.Type getType() {
-            return type;
-        }
-
-        @Override
-        public String toString() {
-            return String.format(
-                    "(%s %d) %s TRANSACTION:" + System.lineSeparator()
-                    + "\tInitiator: %s (Balance: %.2f -> %.2f)" + System.lineSeparator()
-                    + "\tTotal: %.2f" + System.lineSeparator()
-                    + "\tStatus: %s",
-                    UserManager.getInstance().getAdmin().getTimeManager().getTimeUnitName(),
-                    getExecutionTime(),
-                    type, getInitiatorID(), getInitiatorBalanceBefore(),
-                    getInitiatorBalanceAfter(), getTotal(), getStatus());
-        }
-
-    }
-
-    public enum Type implements Unilateral.Type {
+    public enum Type {
 
         DEPOSIT((initiator, total) -> initiator.addFunds(total) ? Status.SUCCESSFUL : Status.FAILED),
         WITHDRAWAL((initiator, total) -> initiator.deductFunds(total) ? Status.SUCCESSFUL : Status.FAILED);
@@ -61,9 +36,21 @@ public class UnilateralTransaction extends AbstractTransaction implements Transa
             this.operation = operation;
         }
 
-        @Override
         public Operation.Unilateral getOperation() {
             return operation;
+        }
+
+        public static UnilateralTransactionTypeData toDTO(Type type) {
+            UnilateralTransactionTypeData result = null;
+            switch(type) {
+                case DEPOSIT:
+                    result = UnilateralTransactionTypeData.DEPOSIT;
+                    break;
+                case WITHDRAWAL:
+                    result = UnilateralTransactionTypeData.WITHDRAWAL;
+                    break;
+            }
+            return result;
         }
 
     }

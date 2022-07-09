@@ -1,5 +1,6 @@
 package com.alternabank.engine.loan.state;
 
+import com.alternabank.dto.loan.LoanDetails;
 import com.alternabank.engine.loan.Loan;
 
 import java.util.*;
@@ -9,7 +10,7 @@ public class LoanManagerState {
     private final Set<String> availableCategories = new HashSet<>();
     private final Map<String, Loan> loansByID = new HashMap<>();
 
-    public LoanManagerState(Set<String> availableCategories, Map<String, Loan> loansByID) {
+    public LoanManagerState(List<String> availableCategories, Map<String, Loan> loansByID) {
         this.availableCategories.addAll(availableCategories);
         this.loansByID.putAll(loansByID);
     }

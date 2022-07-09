@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane fitToHeight="true" fitToWidth="true" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.client.user.payment.controls.PaymentControlsViewController">
+   <content>
+      <GridPane id="paymentControlsView" fx:id="paymentControlsViewComponent" alignment="CENTER" hgap="5.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="150.0" prefWidth="1030.0" vgap="5.0">
+        <columnConstraints>
+          <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" vgrow="ALWAYS" />
+            <RowConstraints minHeight="10.0" vgrow="NEVER" />
+        </rowConstraints>
+         <children>
+            <Button id="payAccumulatedDebt" fx:id="payAccumulatedDebtButton" alignment="CENTER" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onAccumulatedDebtPaymentRequest" prefHeight="105.0" prefWidth="508.0" text="Pay accumulated debt (#)" />
+            <VBox fx:id="riskPaymentArea" alignment="CENTER" disable="true" prefHeight="100.0" prefWidth="100.0" spacing="5.0" style="-fx-border-color: LIGHTGREY; -fx-border-radius: 5 5 5 5;" GridPane.rowIndex="1">
+               <children>
+                  <Label text="RISK:" />
+                  <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="5.0">
+                     <children>
+                        <Label text="Payment total:" />
+                        <TextField id="riskPaymentTotal" fx:id="riskPaymentTotalTextField" />
+                        <Button fx:id="riskPaymentButton" mnemonicParsing="false" onAction="#onRiskPaymentRequest" text="Pay" />
+                     </children>
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </HBox>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </VBox>
+            <Button id="payRemainingTotal" fx:id="payRemainingTotalButton" disable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onRemainingLoanTotalPaymentRequest" prefHeight="209.0" prefWidth="650.0" text="Pay remaining loan total (#)" GridPane.columnIndex="1" GridPane.rowSpan="2" />
+         </children>
+         <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </padding>
+      </GridPane>
+   </content>
+</ScrollPane>

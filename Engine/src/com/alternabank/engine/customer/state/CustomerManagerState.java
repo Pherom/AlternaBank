@@ -1,8 +1,7 @@
 package com.alternabank.engine.customer.state;
 
+import com.alternabank.dto.customer.CustomerDetails;
 import com.alternabank.engine.customer.CustomerManager;
-import com.alternabank.engine.transaction.event.listener.BilateralTransactionListener;
-import com.alternabank.engine.transaction.event.listener.UnilateralTransactionListener;
 
 import java.util.*;
 

@@ -1,0 +1,12 @@
+.record-cell {
+    -fx-text-fill: WHITE;
+    -fx-font-weight: BOLD;
+}
+
+.record-cell.failed {
+    -fx-background-color: CRIMSON;
+}
+
+.record-cell.successful {
+    -fx-background-color: SEAGREEN;
+}

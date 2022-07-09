@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane fitToWidth="true" vbarPolicy="NEVER" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.client.loan.risk.RiskLoanInformationViewController">
+   <content>
+      <GridPane id="riskLoanInformationView" fx:id="riskLoanInformationViewComponent" hgap="5.0" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" prefHeight="30.0" prefWidth="300.0" vgap="5.0">
+        <columnConstraints>
+          <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="-Infinity" />
+            <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
+          <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="-Infinity" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <Label style="-fx-font-weight: bold;" text="DELAYED INSTALLMENTS:">
+               <GridPane.margin>
+                  <Insets right="5.0" />
+               </GridPane.margin>
+            </Label>
+            <Label id="delayedInstallmentCount" fx:id="delayedInstallmentCountLabel" maxWidth="1.7976931348623157E308" prefWidth="35.0" text="#" GridPane.columnIndex="1">
+               <GridPane.margin>
+                  <Insets left="5.0" />
+               </GridPane.margin>
+            </Label>
+            <Label text="Total:" GridPane.columnIndex="2">
+               <padding>
+                  <Insets left="5.0" right="5.0" />
+               </padding>
+            </Label>
+            <Label fx:id="accumulatedDebtTotalLabel" maxWidth="1.7976931348623157E308" prefHeight="17.0" prefWidth="40.0" text="#" GridPane.columnIndex="3">
+               <padding>
+                  <Insets left="5.0" />
+               </padding>
+            </Label>
+            <Label id="delayedInstallmentTotal" fx:id="delayedInstallmentTotalLabel1" layoutX="264.0" layoutY="17.0" text="#">
+               <padding>
+                  <Insets left="5.0" />
+               </padding>
+            </Label>
+         </children>
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+         <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </padding>
+      </GridPane>
+   </content>
+</ScrollPane>

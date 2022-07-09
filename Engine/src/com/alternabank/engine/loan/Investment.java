@@ -1,6 +1,7 @@
 package com.alternabank.engine.loan;
 
-import java.util.Set;
+import com.alternabank.dto.loan.InvestmentDetails;
+import com.alternabank.dto.loan.request.InvestmentRequest;
 
 public interface Investment {
 
@@ -12,29 +13,15 @@ public interface Investment {
     int MAXIMUM_LOAN_OWNERSHIP_PERCENTAGE_MAX = 100;
     int MAXIMUM_BORROWER_ACTIVE_LOANS_MIN = 0;
 
-    Request getOriginalRequest();
+    InvestmentRequest getOriginalRequest();
 
-    interface Request {
+    String getLoanID();
 
-        String getLenderName();
+    double getInvestmentTotal();
 
-        double getTotal();
+    InvestmentDetails toDTO();
 
-        Set<String> getCategoriesOfInterest();
+    void setForSale(boolean forSale);
 
-        double getMinimumInterestRate();
-
-        double getMinimumInterest();
-
-        int getMinimumLoanTerm();
-
-        int getMaximumLoanOwnershipPercentage();
-
-        int getMaximumBorrowerActiveLoans();
-
-        Set<String> getChosenLoanIDs();
-
-        int getChosenLoanCount();
-    }
-
+    boolean getForSale();
 }

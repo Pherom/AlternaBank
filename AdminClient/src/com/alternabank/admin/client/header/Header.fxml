@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<GridPane id="header" fx:id="headerComponent" hgap="10.0" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="600.0" stylesheets="@Header.css" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.alternabank.admin.client.header.HeaderController">
+  <columnConstraints>
+    <ColumnConstraints hgrow="ALWAYS" maxWidth="1.7976931348623157E308" minWidth="0.0" prefWidth="100.0" />
+      <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="100.0" />
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints minHeight="0.0" prefHeight="30.0" vgrow="SOMETIMES" />
+  </rowConstraints>
+   <children>
+      <VBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="100.0" spacing="10.0" style="-fx-border-color: lightgrey; -fx-border-radius: 5 5 5 5;" GridPane.columnIndex="1">
+         <children>
+            <Label id="currentTimeDescription" fx:id="currentTimeDescriptionLabel" text="Current Time:" />
+            <Label id="currentTime" fx:id="currentTimeLabel" text="#" />
+         </children>
+         <padding>
+            <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+         </padding>
+      </VBox>
+      <VBox prefHeight="200.0" prefWidth="100.0" spacing="5.0">
+         <children>
+            <Label text="Manipulate time:" />
+            <GridPane prefHeight="74.0" prefWidth="476.0">
+              <columnConstraints>
+                <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="10.0" />
+                  <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="10.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <Button mnemonicParsing="false" prefHeight="64.0" prefWidth="92.0" text="Reverse Time" />
+                  <Button fx:id="reverseTimeButton" mnemonicParsing="false" onAction="#onReverseTimeRequest" prefHeight="64.0" prefWidth="92.0" text="Reverse Time" />
+                  <Button fx:id="advanceTimeButton" mnemonicParsing="false" onAction="#onAdvanceTimeRequest" prefHeight="64.0" prefWidth="92.0" text="Advance Time" GridPane.columnIndex="2" />
+               </children>
+            </GridPane>
+         </children>
+      </VBox>
+   </children>
+   <padding>
+      <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />
+   </padding>
+</GridPane>
